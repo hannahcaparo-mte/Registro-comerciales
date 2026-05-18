@@ -826,81 +826,119 @@ function cargarProgramadasHoy() {
   vacio.classList.add("hidden");
 
   const hoy = nowDate();
+
+  // Lectura por JSONP (esquiva la restricción CORS de Apps Script).
+  // Se crea un <script> que llama a la URL con un "callback".
+  const cbName =
+    "jsonp_programadas_" + Date.now() + "_" +
+    Math.floor(Math.random() * 100000);
+
+  let scriptTag = null;
+  let timeoutId = null;
+
+  function limpiar() {
+    if (timeoutId) clearTimeout(timeoutId);
+    if (scriptTag && scriptTag.parentNode) {
+      scriptTag.parentNode.removeChild(scriptTag);
+    }
+    try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+  }
+
+  // Función global temporal que el Apps Script "ejecutará".
+  window[cbName] = function (data) {
+    limpiar();
+    procesarProgramadas(data, { sub, body, vacio, badge });
+  };
+
   const url =
     SHEETS_WEBAPP_URL +
     "?accion=programadas" +
     "&comercial=" + encodeURIComponent(COMERCIAL.toLowerCase()) +
-    "&fecha=" + encodeURIComponent(hoy);
+    "&fecha=" + encodeURIComponent(hoy) +
+    "&callback=" + encodeURIComponent(cbName) +
+    "&t=" + Date.now();
 
-  fetch(url, { method: "GET" })
-    .then((res) => res.json())
-    .then((data) => {
-      if (!data || !data.ok) {
-        sub.textContent =
-          "No se pudo leer la hoja" +
-          (data && data.error ? ": " + data.error : "") + ".";
-        return;
-      }
+  scriptTag = document.createElement("script");
+  scriptTag.src = url;
+  scriptTag.onerror = function () {
+    limpiar();
+    sub.textContent =
+      "Error de conexión al leer la hoja. Revisa tu internet e inténtalo otra vez.";
+  };
 
-      // Filtrar las que ya se llamaron desde aquí hoy.
-      const items = (data.items || []).filter(
-        (it) => programadasOcultas.indexOf(it.contacto) === -1
-      );
+  // Si en 15 s no respondió, avisar.
+  timeoutId = setTimeout(function () {
+    limpiar();
+    sub.textContent =
+      "La hoja tardó demasiado en responder. Presiona “Actualizar lista”.";
+  }, 15000);
 
-      badge.textContent = items.length;
+  document.body.appendChild(scriptTag);
+}
 
-      if (items.length === 0) {
-        sub.textContent = "No tienes llamadas programadas pendientes para hoy.";
-        vacio.classList.remove("hidden");
-        return;
-      }
+function procesarProgramadas(data, ui) {
+  const { sub, body, vacio, badge } = ui;
 
-      sub.textContent =
-        items.length === 1
-          ? "Tienes 1 llamada programada para hoy."
-          : "Tienes " + items.length + " llamadas programadas para hoy.";
+  if (!data || !data.ok) {
+    sub.textContent =
+      "No se pudo leer la hoja" +
+      (data && data.error ? ": " + data.error : "") + ".";
+    return;
+  }
 
-      // Ordenar por hora tentativa (texto; vacías al final).
-      items.sort((a, b) => {
-        if (!a.horaProx) return 1;
-        if (!b.horaProx) return -1;
-        return String(a.horaProx).localeCompare(String(b.horaProx));
-      });
+  // Filtrar las que ya se llamaron desde aquí hoy.
+  const items = (data.items || []).filter(
+    (it) => programadasOcultas.indexOf(it.contacto) === -1
+  );
 
-      body.innerHTML = items
-        .map((it) => {
-          const numero = escapeHtml(it.contacto);
-          const nombre = escapeHtml(it.nombre) || "—";
-          const hora = escapeHtml(it.horaProx) || "—";
-          return `
-            <tr>
-              <td><strong class="mono">${numero}</strong></td>
-              <td>${nombre}</td>
-              <td class="mono">${hora}</td>
-              <td>
-                <button class="btn btn-primary btn-llamar-ahora"
-                        data-num="${numero}" type="button">
-                  Llamar ahora
-                </button>
-              </td>
-            </tr>
-          `;
-        })
-        .join("");
+  badge.textContent = items.length;
 
-      // Conectar botones "Llamar ahora".
-      body.querySelectorAll(".btn-llamar-ahora").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const num = btn.dataset.num;
-          llamarAhoraDesdeRecordatorio(num);
-        });
-      });
+  if (items.length === 0) {
+    sub.textContent = "No tienes llamadas programadas pendientes para hoy.";
+    vacio.classList.remove("hidden");
+    return;
+  }
+
+  sub.textContent =
+    items.length === 1
+      ? "Tienes 1 llamada programada para hoy."
+      : "Tienes " + items.length + " llamadas programadas para hoy.";
+
+  // Ordenar por hora tentativa (texto; vacías al final).
+  items.sort((a, b) => {
+    if (!a.horaProx) return 1;
+    if (!b.horaProx) return -1;
+    return String(a.horaProx).localeCompare(String(b.horaProx));
+  });
+
+  body.innerHTML = items
+    .map((it) => {
+      const numero = escapeHtml(it.contacto);
+      const nombre = escapeHtml(it.nombre) || "—";
+      const hora = escapeHtml(it.horaProx) || "—";
+      return `
+        <tr>
+          <td><strong class="mono">${numero}</strong></td>
+          <td>${nombre}</td>
+          <td class="mono">${hora}</td>
+          <td>
+            <button class="btn btn-primary btn-llamar-ahora"
+                    data-num="${numero}" type="button">
+              Llamar ahora
+            </button>
+          </td>
+        </tr>
+      `;
     })
-    .catch((err) => {
-      console.error("Error al leer programadas:", err);
-      sub.textContent =
-        "Error de conexión al leer la hoja. Revisa tu internet e inténtalo otra vez.";
+    .join("");
+
+  // Conectar botones "Llamar ahora".
+  body.querySelectorAll(".btn-llamar-ahora").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const num = btn.dataset.num;
+      llamarAhoraDesdeRecordatorio(num);
     });
+  });
 }
 
 function llamarAhoraDesdeRecordatorio(numero) {
