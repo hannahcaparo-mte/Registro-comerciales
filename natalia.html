@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro Comercial · Natalia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ====== HEADER ====== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <img src="LOGO.png" alt="Logo" class="brand-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <span class="brand-mark" style="display:none;"></span>
+        <div class="brand-text">
+          <span class="brand-label">Comercial</span>
+          <h1 class="brand-name">Natalia</h1>
+        </div>
+      </div>
+
+      <div class="header-right">
+
+        <!-- ==META== -->
+        <div class="goal-tracker" id="goalTracker">
+          <div class="goal-info">
+            <span class="goal-label">Meta del día</span>
+            <span class="goal-count">
+              <strong id="goalCurrent">0</strong>
+              <span class="goal-divider">/</span>
+              <span id="goalTotal">50</span>
+            </span>
+          </div>
+          <div class="goal-bar">
+            <div class="goal-bar-fill" id="goalBarFill"></div>
+          </div>
+        </div>
+
+        <div class="datetime">
+          <div class="dt-block">
+            <span class="dt-label">Fecha de hoy</span>
+            <span class="dt-value" id="currentDate">—</span>
+          </div>
+          <div class="dt-divider"></div>
+          <div class="dt-block">
+            <span class="dt-label">Hora</span>
+            <span class="dt-value mono" id="currentTime">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="register" role="tab">
+        <span class="tab-num">01</span>
+        <span class="tab-text">Registrar nueva llamada</span>
+      </button>
+      <button class="tab" data-tab="history" role="tab">
+        <span class="tab-num">02</span>
+        <span class="tab-text">Historial de llamadas (hoy)</span>
+        <span class="tab-badge" id="historyCount">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ====== CONTENIDO ====== -->
+  <main class="app-main">
+
+  
+    <!-- PESTAÑA 1 -->
+  
+    <section class="tab-panel active" id="panel-register">
+
+      <!-- ===== INICIO ===== -->
+      <div class="stage" id="stage-start">
+        <div class="stage-header compact">
+         
+          <h2 class="stage-title">Nueva llamada</h2>
+          <p class="stage-sub">Ingresar el número de contacto.</p>
+        </div>
+
+        <div class="card start-card">
+          <label class="field">
+            <span class="field-label">Contacto</span>
+            <input
+              type="tel"
+              id="inputContacto"
+              placeholder="Ej. 987654321"
+              autocomplete="off"
+              inputmode="numeric"
+              maxlength="9"
+              pattern="[0-9]{9}"
+            />
+            <span class="field-hint" id="contactoHint">Al momento de empezar a llamar presionar "Iniciar llamada"</span>
+          </label>
+
+          <button class="btn btn-primary btn-lg" id="btnIniciar" disabled>
+            <span class="btn-dot"></span>
+            Iniciar llamada
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== ETAPA 2 ===== -->
+
+      <div class="stage hidden" id="stage-calling">
+        <div class="stage-header compact">
+          <span class="stage-tag pulse" id="stageTag">Esperando respuesta ...</span>
+          <h2 class="stage-title">Llamada activa</h2>
+          <p class="stage-sub" id="callingSub">Esperando respuesta…</p>
+        </div>
+
+        <div class="split-layout">
+          <!-- Panel de control de la llamada -->
+          <div class="card calling-card">
+            <div class="calling-info">
+              <div class="info-row">
+                <span class="info-label">Contacto</span>
+                <span class="info-value mono" id="dispContacto">—</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Inicio de la interacción</span>
+                <span class="info-value mono" id="dispHoraInicio">—</span>
+              </div>
+            </div>
+
+            <div class="timer-wrap" id="timerWrap1">
+              <span class="timer-label">Duración</span>
+              <div class="timer mono" id="timer">00:00</div>
+              <div class="timer-status" id="timerStatus">Marcando…</div>
+            </div>
+
+            <!-- Botones iniciales -->
+            <div class="calling-actions" id="callingActions1">
+              <button class="btn btn-success" id="btnRespondio">
+                <span class="btn-icon">✓</span>
+                Respondió
+              </button>
+              <button class="btn btn-ghost" id="btnNoContesto">
+                Interacción perdida
+              </button>
+            </div>
+
+            <!-- Botón "Finalizó la interacción" -->
+            <div class="calling-actions hidden" id="callingActions2">
+              <button class="btn btn-danger btn-block" id="btnTerminar">
+                Finalizó la conversación
+              </button>
+            </div>
+
+            <!-- Bloque de cierre cuando SÍ contestó -->
+            <div class="closing-block hidden" id="closingBlockYes">
+              <div class="section-divider"><span>Motivo de finalización</span></div>
+              <div class="chip-group" id="motivoYesGroup">
+                <button type="button" class="chip" data-value="Colgó">Colgó</button>
+                <button type="button" class="chip" data-value="Interacción finalizada">Interacción finalizada</button>
+              </div>
+              <button class="btn btn-primary btn-block mt-md" id="btnGuardarYes">
+                <span class="btn-icon">+</span>
+                Agregar nueva información
+              </button>
+              <button class="btn btn-ghost btn-block mt-sm" id="btnCancelarYes">Cancelar</button>
+            </div>
+
+            <!-- Bloque de cierre cuando NO contestó -->
+            <div class="closing-block hidden" id="closingBlockNo">
+              <div class="section-divider"><span>Motivo de finalización</span></div>
+              <div class="chip-group" id="motivoNoGroup">
+                <button type="button" class="chip" data-value="Colgó">Colgó</button>
+                <button type="button" class="chip" data-value="No contestó">No contestó</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulario en vivo -->
+          <div class="card form-card live-form" id="liveForm">
+            <div class="live-form-header">
+              <h3 class="live-form-title">Información de la conversación</h3>
+              <p class="live-form-sub">Llena estos campos mientras la conversación está activa.</p>
+            </div>
+
+            <!-- FILA 1: Interés + Calidad de lead -->
+            <div class="form-row">
+              <div class="field">
+                <span class="field-label">¿Muestra interés en el programa?</span>
+                <div class="chip-group" id="interesGroup">
+                  <button type="button" class="chip chip-yes" data-value="Sí">Sí</button>
+                  <button type="button" class="chip chip-no" data-value="No">No</button>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">Calidad de lead</span>
+                <div class="chip-group temp-group" id="calidadGroup">
+                  <button type="button" class="chip chip-cold" data-value="Frío">❄ Frío</button>
+                  <button type="button" class="chip chip-warm" data-value="Tibio">◐ Tibio</button>
+                  <button type="button" class="chip chip-hot" data-value="Caliente">🔥 Caliente</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-divider"><span>Segmentación de lead</span></div>
+
+            <div class="form-row">
+              <label class="field">
+                <span class="field-label">Programa de interés</span>
+                <select id="programa">
+                  <option value="">Seleccionar…</option>
+                  <option>GAC I</option>
+                  <option>GAC II</option>
+                  <option>GTD</option>
+                  <option>ACE</option>
+                  <option>CGI</option>
+                  <option>GEIMP</option>
+                  <option>CIRCUITO</option>
+                  <option>LAB SUPPLY</option>
+                  <option>DEMO COMEX</option>
+                  <option>OCI</option>
+                  <option>GOL</option>
+                  <option>LEAN LOGISTIC</option>
+                  <option>TCI</option>
+                  <option>PGA</option>
+                  <option>COMPRAS</option>
+                  <option>SDA</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span class="field-label">Carrera</span>
+                <select id="carrera">
+                  <option value="">Seleccionar…</option>
+                  <option>Administración</option>
+                  <option>Negocios Internacionales</option>
+                  <option>Ingenieria Industrial</option>
+                  <option>Administración Logística</option>
+                  <option>Administración Industrial</option>
+                  <option>Otra carrera afín</option>
+                  <option>No tiene carrera</option>
+                  <option>No segmento carrera</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <span class="field-label">¿de Provincia?</span>
+                <div class="chip-group" id="provinciaGroup">
+                  <button type="button" class="chip chip-yes" data-value="Sí">Sí</button>
+                  <button type="button" class="chip chip-no" data-value="No">No</button>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">¿del Segmento de edad? </span>
+                <div class="chip-group" id="edadGroup">
+                  <button type="button" class="chip chip-yes" data-value="Sí">Sí</button>
+                  <button type="button" class="chip chip-no" data-value="No">No</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-divider"><span>Seguimiento posterior</span></div>
+
+            <div class="form-row">
+              <label class="field field-toggle">
+                <span class="field-label">¿Llamar luego? -> recordatorio</span>
+                <label class="switch">
+                  <input type="checkbox" id="llamarLuego" />
+                  <span class="slider"></span>
+                </label>
+              </label>
+            </div>
+
+            <div class="datetime-row" id="proxContactoWrap">
+              <label class="field">
+                <span class="field-label">Fecha tentativa</span>
+                <input type="date" id="proxContactoYes" />
+              </label>
+              <div class="field">
+                <span class="field-label">Hora tentativa</span>
+                <div class="time-picker">
+                  <select id="proxHoraYesH" class="time-h">
+                    <option value="">HORA</option>
+                    <option>1</option><option>2</option><option>3</option>
+                    <option>4</option><option>5</option><option>6</option>
+                    <option>7</option><option>8</option><option>9</option>
+                    <option>10</option><option>11</option><option>12</option>
+                  </select>
+                  <select id="proxHoraYesM" class="time-m">
+                    <option value="00">:00</option>
+                    <option value="15">:15</option>
+                    <option value="30">:30</option>
+                    <option value="45">:45</option>
+                  </select>
+                  <select id="proxHoraYesAP" class="time-ap">
+                    <option>AM</option>
+                    <option selected>PM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-divider"><span>Sin interés actualmente </span></div>
+
+            <label class="field">
+              <span class="field-label">Motivo de no interés</span>
+              <select id="motivoNoInteres">
+                <option value="">Seleccionar…</option>
+                <option value="Ubicación (provincia)">Ubicación (provincia)</option>
+                <option value="Costo del programa (muy caro)">Costo del programa (muy caro)</option>
+                <option value="Falta de tiempo (horarios no cuadran)">Falta de tiempo (horarios no cuadran)</option>
+                <option value="Consiguió trabajo">Consiguió trabajo</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </label>
+
+            <label class="field hidden" id="motivoOtrosWrap">
+              <span class="field-label">Especificar otro motivo</span>
+              <input type="text" id="motivoNoInteresOtros" placeholder="Escribe el motivo…" />
+            </label>
+
+            <div class="section-divider"><span>Observaciones</span></div>
+
+            <label class="field">
+              <span class="field-label">Observación</span>
+              <textarea id="Nota" rows="3" placeholder="Notas adicionales de la llamada…"></textarea>
+            </label>
+          </div>
+
+          <!-- Columna derecha alternativa: cuando NO contestó -->
+
+          <div class="card form-card no-answer-panel hidden" id="noAnswerPanel">
+            <div class="live-form-header">
+              <h3 class="live-form-title">Seguimiento posterior</h3>
+              <p class="live-form-sub">Define cuándo volver a contactar.</p>
+            </div>
+
+            <label class="field field-toggle">
+              <span class="field-label">¿Volver a llamar?</span>
+              <label class="switch">
+                <input type="checkbox" id="volverLlamar" checked />
+                <span class="slider"></span>
+              </label>
+            </label>
+
+            <div id="volverLlamarFields">
+              <label class="field">
+                <span class="field-label">Fecha próximo contacto</span>
+                <input type="date" id="proxContactoNo" />
+              </label>
+
+              <label class="field">
+                <span class="field-label">Hora tentativa</span>
+                <div class="time-picker">
+                  <select id="proxHoraNoH" class="time-h">
+                    <option value="">HORA</option>
+                    <option>1</option><option>2</option><option>3</option>
+                    <option>4</option><option>5</option><option>6</option>
+                    <option>7</option><option>8</option><option>9</option>
+                    <option>10</option><option>11</option><option>12</option>
+                  </select>
+                  <select id="proxHoraNoM" class="time-m">
+                    <option value="00">:00</option>
+                    <option value="15">:15</option>
+                    <option value="30">:30</option>
+                    <option value="45">:45</option>
+                  </select>
+                  <select id="proxHoraNoAP" class="time-ap">
+                    <option>AM</option>
+                    <option selected>PM</option>
+                  </select>
+                </div>
+              </label>
+            </div>
+
+            <div class="no-answer-actions">
+              <button class="btn btn-primary btn-block" id="btnGuardarNo">
+                <span class="btn-icon">+</span>
+                Agregar nueva información
+              </button>
+              <button class="btn btn-ghost btn-block mt-sm" id="btnCancelarNo">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =============================================== -->
+    <!-- PESTAÑA 2: HISTORIAL                             -->
+    <!-- =============================================== -->
+    <section class="tab-panel" id="panel-history">
+      <div class="stage-header">
+        <span class="stage-tag">Registros actualizados</span>
+        <h2 class="stage-title">Historial diario de llamadas</h2>
+        <p class="stage-sub" id="historySub">Aún no hay llamadas registradas.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Número</th>
+              <th>Inicio</th>
+              <th>Duración</th>
+	      <th>Fin</th>
+              <th>Contestó</th>
+              <th>Interés</th>
+              <th>Calidad</th>
+              <th>Seguimiento posterior</th>
+              <th>Nota</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+
+        </table>
+
+        <div class="empty-state hidden" id="emptyState">
+          <div class="empty-icon">⌗</div>
+          <p>Sin registros todavía</p>
+          <span>Las llamadas diarias aparecerán registradas aquí.</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script_natalia.js"></script>
+</body>
+</html>
