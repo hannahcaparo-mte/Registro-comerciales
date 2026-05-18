@@ -48,6 +48,7 @@ const callState = {
   edad: "",
   motivoNoInteres: "",
   observacion: "",
+  nombre: "",
 };
 
 let timerInterval = null;
@@ -186,6 +187,10 @@ tabs.forEach((tab) => {
     panels.forEach((p) =>
       p.classList.toggle("active", p.id === `panel-${target}`)
     );
+    // Al abrir la pestaña de llamadas programadas, refrescar la lista.
+    if (target === "reminders") {
+      cargarProgramadasHoy();
+    }
   });
 });
 
@@ -269,6 +274,7 @@ function resetCallState() {
     edad: "",
     motivoNoInteres: "",
     observacion: "",
+    nombre: "",
   });
 
   document.getElementById("inputContacto").value = "";
@@ -293,6 +299,8 @@ function resetCallState() {
   document.getElementById("motivoNoInteresOtros").value = "";
   document.getElementById("motivoOtrosWrap").classList.add("hidden");
   document.getElementById("Nota").value = "";
+  const _nr = document.getElementById("nombreRef");
+  if (_nr) _nr.value = "";
 
   document.querySelectorAll(".chip.selected").forEach((c) =>
     c.classList.remove("selected")
@@ -521,6 +529,9 @@ function recolectarFormularioEnVivo() {
   callState.fechaProxContacto = document.getElementById("proxContactoYes").value;
   callState.horaProxContacto = composeTime("proxHoraYesH", "proxHoraYesM", "proxHoraYesAP");
 
+  const _nr = document.getElementById("nombreRef");
+  callState.nombre = _nr ? _nr.value.trim() : "";
+
   // Motivo de no interés: si es "Otros", tomar el texto escrito
   const motivoSel = document.getElementById("motivoNoInteres").value;
   if (motivoSel === "Otros") {
@@ -619,6 +630,7 @@ function saveCall() {
     edad: callState.edad,
     motivoNoInteres: callState.motivoNoInteres,
     observacion: callState.observacion,
+    nombre: callState.nombre,
     volverLlamar: callState.volverLlamar ? "Sí" : "No",
     timestamp: new Date().toISOString(),
   };
@@ -678,6 +690,7 @@ function enviarASheets(r) {
     llamarLuego: r.llamarLuego,
     fechaProxContacto: r.fechaProxContacto,
     horaProxContacto: r.horaProxContacto,
+    nombre: r.nombre || "",
     programa: r.programa,
     carrera: r.carrera,
     provincia: r.provincia,
@@ -781,6 +794,138 @@ function escapeHtml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+/* =========================================================
+   LLAMADAS PROGRAMADAS PARA HOY (RECORDATORIOS)
+   ---------------------------------------------------------
+   Lee la hoja de cálculo (vía el Apps Script) y muestra
+   todas las filas de esta comercial cuya FECHA PROXIMO
+   CONTACTO sea igual a hoy. Al presionar "Llamar ahora",
+   el número pasa a la pestaña 1 listo para iniciar, y esa
+   línea desaparece de la lista (en pantalla).
+   ========================================================= */
+
+// Números que ya se "llamaron ahora" hoy desde recordatorios.
+// Se ocultan de la lista aunque sigan en la hoja.
+let programadasOcultas = [];
+
+function cargarProgramadasHoy() {
+  const sub = document.getElementById("remindersSub");
+  const body = document.getElementById("remindersBody");
+  const vacio = document.getElementById("remindersEmpty");
+  const badge = document.getElementById("remindersCount");
+
+  if (!SHEETS_WEBAPP_URL || SHEETS_WEBAPP_URL.indexOf("PEGA_AQUI") === 0) {
+    sub.textContent = "Falta configurar la conexión con la hoja de cálculo.";
+    return;
+  }
+
+  sub.textContent = "Cargando llamadas programadas…";
+  body.innerHTML = "";
+  vacio.classList.add("hidden");
+
+  const hoy = nowDate();
+  const url =
+    SHEETS_WEBAPP_URL +
+    "?accion=programadas" +
+    "&comercial=" + encodeURIComponent(COMERCIAL.toLowerCase()) +
+    "&fecha=" + encodeURIComponent(hoy);
+
+  fetch(url, { method: "GET" })
+    .then((res) => res.json())
+    .then((data) => {
+      if (!data || !data.ok) {
+        sub.textContent =
+          "No se pudo leer la hoja" +
+          (data && data.error ? ": " + data.error : "") + ".";
+        return;
+      }
+
+      // Filtrar las que ya se llamaron desde aquí hoy.
+      const items = (data.items || []).filter(
+        (it) => programadasOcultas.indexOf(it.contacto) === -1
+      );
+
+      badge.textContent = items.length;
+
+      if (items.length === 0) {
+        sub.textContent = "No tienes llamadas programadas pendientes para hoy.";
+        vacio.classList.remove("hidden");
+        return;
+      }
+
+      sub.textContent =
+        items.length === 1
+          ? "Tienes 1 llamada programada para hoy."
+          : "Tienes " + items.length + " llamadas programadas para hoy.";
+
+      // Ordenar por hora tentativa (texto; vacías al final).
+      items.sort((a, b) => {
+        if (!a.horaProx) return 1;
+        if (!b.horaProx) return -1;
+        return String(a.horaProx).localeCompare(String(b.horaProx));
+      });
+
+      body.innerHTML = items
+        .map((it) => {
+          const numero = escapeHtml(it.contacto);
+          const nombre = escapeHtml(it.nombre) || "—";
+          const hora = escapeHtml(it.horaProx) || "—";
+          return `
+            <tr>
+              <td><strong class="mono">${numero}</strong></td>
+              <td>${nombre}</td>
+              <td class="mono">${hora}</td>
+              <td>
+                <button class="btn btn-primary btn-llamar-ahora"
+                        data-num="${numero}" type="button">
+                  Llamar ahora
+                </button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      // Conectar botones "Llamar ahora".
+      body.querySelectorAll(".btn-llamar-ahora").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const num = btn.dataset.num;
+          llamarAhoraDesdeRecordatorio(num);
+        });
+      });
+    })
+    .catch((err) => {
+      console.error("Error al leer programadas:", err);
+      sub.textContent =
+        "Error de conexión al leer la hoja. Revisa tu internet e inténtalo otra vez.";
+    });
+}
+
+function llamarAhoraDesdeRecordatorio(numero) {
+  // Ocultar esta línea de la lista (ya se va a llamar).
+  if (programadasOcultas.indexOf(numero) === -1) {
+    programadasOcultas.push(numero);
+  }
+
+  // Ir a la pestaña 1 (Registrar nueva llamada).
+  document.querySelector('.tab[data-tab="register"]').click();
+
+  // Poner el número en el campo y habilitar "Iniciar llamada".
+  const inp = document.getElementById("inputContacto");
+  inp.value = String(numero).replace(/\D/g, "").slice(0, 9);
+  // Disparar la validación que habilita el botón.
+  inp.dispatchEvent(new Event("input", { bubbles: true }));
+  inp.focus();
+
+  showToast("Número " + numero + " listo. Presiona “Iniciar llamada”.");
+}
+
+// Botón "Actualizar lista".
+const _btnRecargar = document.getElementById("btnRecargarProgramadas");
+if (_btnRecargar) {
+  _btnRecargar.addEventListener("click", cargarProgramadasHoy);
 }
 
 /* =========================================================

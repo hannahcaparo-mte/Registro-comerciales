@@ -725,6 +725,16 @@ input, select, textarea { font-family: inherit; font-size: 14px; color: inherit;
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:not(:disabled):hover { background: var(--accent-hover); }
 
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--accent);
+  border: 1px solid var(--line);
+}
+.btn-secondary:not(:disabled):hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
 .btn-success { background: var(--success); color: #fff; }
 .btn-success:hover { background: #245f3e; }
 

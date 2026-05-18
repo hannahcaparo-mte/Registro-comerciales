@@ -64,6 +64,11 @@
         <span class="tab-text">Historial de llamadas (hoy)</span>
         <span class="tab-badge" id="historyCount">0</span>
       </button>
+      <button class="tab" data-tab="reminders" role="tab">
+        <span class="tab-num">03</span>
+        <span class="tab-text">Llamadas programadas (hoy)</span>
+        <span class="tab-badge" id="remindersCount">0</span>
+      </button>
     </nav>
   </header>
 
@@ -302,6 +307,11 @@
               </div>
             </div>
 
+            <label class="field" id="nombreRefWrap">
+              <span class="field-label">Nombre o referencia (opcional)</span>
+              <input type="text" id="nombreRef" placeholder="Ej. Sr. Pérez, mamá del postulante…" />
+            </label>
+
             <div class="section-divider"><span>Sin interés actualmente </span></div>
 
             <label class="field">
@@ -421,6 +431,43 @@
           <div class="empty-icon">⌗</div>
           <p>Sin registros todavía</p>
           <span>Las llamadas diarias aparecerán registradas aquí.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================================== -->
+    <!-- PESTAÑA 3: LLAMADAS PROGRAMADAS PARA HOY         -->
+    <!-- =============================================== -->
+    <section class="tab-panel" id="panel-reminders">
+      <div class="stage-header">
+        <span class="stage-tag">Recordatorios del día</span>
+        <h2 class="stage-title">Llamadas programadas para hoy</h2>
+        <p class="stage-sub" id="remindersSub">Cargando…</p>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <button class="btn btn-secondary" id="btnRecargarProgramadas" type="button">
+          ↻ Actualizar lista
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Número</th>
+              <th>Nombre / referencia</th>
+              <th>Hora tentativa</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="remindersBody"></tbody>
+        </table>
+
+        <div class="empty-state hidden" id="remindersEmpty">
+          <div class="empty-icon">☎</div>
+          <p>No hay llamadas programadas para hoy</p>
+          <span>Cuando marques “llamar luego” con fecha de hoy, aparecerán aquí.</span>
         </div>
       </div>
     </section>
