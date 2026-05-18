@@ -159,7 +159,7 @@ updateClock();
 setInterval(updateClock, 1000);
 
 function updateGoalTracker() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = nowDate();
   const llamadasHoy = historial.filter((r) => r.fecha === today).length;
   const meta = getMetaDelDia();
 
@@ -215,7 +215,13 @@ function nowTime() {
   return new Date().toTimeString().slice(0, 8);
 }
 function nowDate() {
-  return new Date().toISOString().slice(0, 10);
+  // Fecha LOCAL (no UTC). Antes usaba toISOString() que está en
+  // UTC y, en Perú (UTC-5), de noche ya marcaba el día siguiente.
+  var d = new Date();
+  var y = d.getFullYear();
+  var m = ("0" + (d.getMonth() + 1)).slice(-2);
+  var dia = ("0" + d.getDate()).slice(-2);
+  return y + "-" + m + "-" + dia;
 }
 function formatDuration(seg) {
   const h = Math.floor(seg / 3600);
