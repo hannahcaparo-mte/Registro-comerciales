@@ -1,21 +1,17 @@
 /* =========================================================
-   REGISTRO COMERCIAL · NATALIA  ·  v3
+   REGISTRO COMERCIAL · NATALIA
    ========================================================= */
 
 const COMERCIAL = "Natalia";
 
 /* =========================================================
    🔌 CONFIGURACIÓN GOOGLE SHEETS
-   Pega aquí la URL que te da Google Apps Script al publicar
-   (ver instrucciones en INSTRUCCIONES.md). Mientras esté
-   vacío, la app funciona igual pero NO sube a la hoja.
    ========================================================= */
+
 const SHEETS_WEBAPP_URL = "https://script.google.com/a/macros/mte.com.pe/s/AKfycbx-fk7WOoUC3T2DXAkNmSMllVvP72HFsYmcVIokVijrSm7wZA6J6Z4Yig8nEHl8vnXNCw/exec";
 
-// Clave para guardar el historial del día en el navegador
 const STORAGE_KEY = "registroNatalia_v3";
 
-// Metas por día (semana). 0 = domingo, 6 = sábado.
 const METAS_POR_DIA = {
   0: 0,   // Domingo
   1: 50,  // Lunes
@@ -26,7 +22,6 @@ const METAS_POR_DIA = {
   6: 25,  // Sábado
 };
 
-// Estado de la llamada actual
 const callState = {
   contacto: "",
   fecha: "",
@@ -54,17 +49,10 @@ const callState = {
 let timerInterval = null;
 let timerStart = 0;
 
-// Almacenamiento (memoria)
 let historial = [];
 
 /* =========================================================
    PERSISTENCIA LOCAL + REINICIO DIARIO
-
-   - Todo lo que se registra en el día queda guardado en el
-     navegador (sobrevive si se recarga la página).
-   - Cuando cambia el día, el historial visible se reinicia
-     (las filas anteriores ya quedaron como backup en la
-     hoja de cálculo de Google).
    ========================================================= */
 function guardarLocal() {
   try {
@@ -86,11 +74,8 @@ function cargarLocal() {
     const hoy = nowDate();
 
     if (data.fecha === hoy && Array.isArray(data.registros)) {
-      // Mismo día: recuperamos lo registrado hoy
       historial = data.registros;
     } else {
-      // Cambió el día -> se reinicia el historial visible.
-      // El día anterior ya está respaldado en Google Sheets.
       historial = [];
       localStorage.setItem(
         STORAGE_KEY,
@@ -103,14 +88,12 @@ function cargarLocal() {
   }
 }
 
-// Revisa periódicamente si cambió el día mientras la app está abierta.
 function chequearCambioDeDia() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const guardadoFecha = raw ? JSON.parse(raw).fecha : null;
     const hoy = nowDate();
     if (guardadoFecha && guardadoFecha !== hoy) {
-      // Pasamos a un nuevo día: reiniciar todo en pantalla.
       historial = [];
       localStorage.setItem(
         STORAGE_KEY,
@@ -124,7 +107,7 @@ function chequearCambioDeDia() {
     console.warn(e);
   }
 }
-// Chequear cada minuto
+
 setInterval(chequearCambioDeDia, 60 * 1000);
 
 /* =========================================================
@@ -187,7 +170,6 @@ tabs.forEach((tab) => {
     panels.forEach((p) =>
       p.classList.toggle("active", p.id === `panel-${target}`)
     );
-    // Al abrir la pestaña de llamadas programadas, refrescar la lista.
     if (target === "reminders") {
       cargarProgramadasHoy();
     }
@@ -215,8 +197,6 @@ function nowTime() {
   return new Date().toTimeString().slice(0, 8);
 }
 function nowDate() {
-  // Fecha LOCAL (no UTC). Antes usaba toISOString() que está en
-  // UTC y, en Perú (UTC-5), de noche ya marcaba el día siguiente.
   var d = new Date();
   var y = d.getFullYear();
   var m = ("0" + (d.getMonth() + 1)).slice(-2);
@@ -312,24 +292,21 @@ function resetCallState() {
     c.classList.remove("selected")
   );
 
-  // Reset visibilidad de botones / bloques de cierre
   document.getElementById("callingActions1").classList.remove("hidden");
   document.getElementById("callingActions2").classList.add("hidden");
   document.getElementById("closingBlockYes").classList.add("hidden");
   document.getElementById("closingBlockNo").classList.add("hidden");
 
-  // Reset timer display y status
+
   document.getElementById("timer").textContent = "00:00";
   document.getElementById("timerWrap1").classList.remove("active", "ended");
   document.getElementById("timerStatus").textContent = "Marcando…";
 
-  // Reset header
   document.getElementById("stageTag").textContent = "En curso";
   document.getElementById("stageTag").classList.remove("live");
   document.getElementById("stageTag").classList.add("pulse");
   document.getElementById("callingSub").textContent = "Esperando respuesta…";
 
-  // Restaurar columnas: live form visible, no-answer-panel oculto
   document.getElementById("liveForm").classList.remove("hidden");
   document.getElementById("noAnswerPanel").classList.add("hidden");
   document.getElementById("volverLlamarFields").classList.remove("disabled");
@@ -404,24 +381,21 @@ document.getElementById("btnNoContesto").addEventListener("click", () => {
   callState.horaFin = nowTime();
   callState.contesto = false;
 
-  // Cambia el header
   const stageTag = document.getElementById("stageTag");
   stageTag.textContent = "Sin respuesta";
   stageTag.classList.remove("pulse");
   document.getElementById("callingSub").textContent =
     "Indica el motivo y agrega seguimiento.";
 
-  // Marcar timer como ended (sigue visible la duración final)
   document.getElementById("timerWrap1").classList.add("ended");
   document.getElementById("timerStatus").textContent =
     `Finalizó · ${callState.horaFin} · Duración ${formatDuration(callState.duracionSeg)}`;
 
-  // Esconder botones iniciales, mostrar bloque de cierre
+
   document.getElementById("callingActions1").classList.add("hidden");
   document.getElementById("closingBlockNo").classList.remove("hidden");
 
-  // Ocultar el formulario en vivo (no aplica para "no contestó")
-  // y mostrar el panel de seguimiento en la columna derecha
+
   document.getElementById("liveForm").classList.add("hidden");
   document.getElementById("noAnswerPanel").classList.remove("hidden");
 });
@@ -433,7 +407,7 @@ document.getElementById("btnRespondio").addEventListener("click", () => {
   callState.horaRespondio = nowTime();
   callState.contesto = true;
 
-  // Cambiar tag y subtítulo
+
   const stageTag = document.getElementById("stageTag");
   stageTag.textContent = "● En conversación";
   stageTag.classList.remove("pulse");
@@ -441,25 +415,25 @@ document.getElementById("btnRespondio").addEventListener("click", () => {
   document.getElementById("callingSub").textContent =
     `Respondió a las ${callState.horaRespondio}. Llena el formulario mientras hablas.`;
 
-  // Cambiar timer a "activo" (verde)
+
   document.getElementById("timerWrap1").classList.add("active");
   document.getElementById("timerStatus").textContent = "En conversación";
 
-  // Cambiar botones: ahora solo "Terminó llamada"
+
   document.getElementById("callingActions1").classList.add("hidden");
   document.getElementById("callingActions2").classList.remove("hidden");
 });
 
-/* "Terminó llamada" — sigue dejando editar el formulario */
+
 document.getElementById("btnTerminar").addEventListener("click", () => {
   stopTimer();
   callState.horaFin = nowTime();
 
-  // Mostrar el bloque de motivo de cierre
+
   document.getElementById("callingActions2").classList.add("hidden");
   document.getElementById("closingBlockYes").classList.remove("hidden");
 
-  // Marcar timer como finalizado
+
   document.getElementById("timerWrap1").classList.remove("active");
   document.getElementById("timerWrap1").classList.add("ended");
   document.getElementById("timerStatus").textContent =
@@ -494,7 +468,7 @@ setupChipGroup("provinciaGroup", (val) => { callState.provincia = val; });
 setupChipGroup("edadGroup", (val) => { callState.edad = val; });
 
 /* =========================================================
-   MOTIVO DE NO INTERÉS — mostrar campo "Otros"
+   MOTIVO DE NO INTERÉS 
    ========================================================= */
 const motivoNoInteresSel = document.getElementById("motivoNoInteres");
 const motivoOtrosWrap = document.getElementById("motivoOtrosWrap");
@@ -509,7 +483,7 @@ motivoNoInteresSel.addEventListener("change", () => {
 });
 
 /* =========================================================
-   HELPER: Componer hora a partir de selectores h+m+AP
+   HORA
    ========================================================= */
 function composeTime(hourSel, minSel, ampmSel) {
   const h = document.getElementById(hourSel).value;
@@ -521,7 +495,7 @@ function composeTime(hourSel, minSel, ampmSel) {
   if (ap === "PM" && h24 !== 12) h24 += 12;
   if (ap === "AM" && h24 === 12) h24 = 0;
 
-  // Formato amigable: "2:30 PM"  (también guardamos versión 24h interna)
+
   return `${h}:${m} ${ap}`;
 }
 
@@ -538,7 +512,7 @@ function recolectarFormularioEnVivo() {
   const _nr = document.getElementById("nombreRef");
   callState.nombre = _nr ? _nr.value.trim() : "";
 
-  // Motivo de no interés: si es "Otros", tomar el texto escrito
+
   const motivoSel = document.getElementById("motivoNoInteres").value;
   if (motivoSel === "Otros") {
     const otro = document.getElementById("motivoNoInteresOtros").value.trim();
@@ -647,7 +621,7 @@ function saveCall() {
   guardarLocal();
 
   // ============================================================
-  // 🔌 ENVÍO INSTANTÁNEO A GOOGLE SHEETS (hoja "NATALIA")
+  // 🔌 ENVÍO INSTANTÁNEO A GOOGLE SHEETS
   // ============================================================
   enviarASheets(registro);
 
@@ -655,20 +629,13 @@ function saveCall() {
   resetCallState();
   showStage("start");
 
-  // Volver a la página inicial y dejar el cursor listo
-  // para ingresar el siguiente número.
+
   document.querySelector('.tab[data-tab="register"]').click();
   document.getElementById("inputContacto").focus();
 }
 
 /* =========================================================
    ENVÍO A GOOGLE SHEETS
-   Manda las 19 columnas en el orden exacto de la hoja:
-   COMERCIAL, CONTACTO, FECHA, HORA INICIO, HORA CONTESTA,
-   DURACIÓN, HORA FIN, CONTESTO, CALIDAD DE LEAD, INTERES,
-   LLAMAR LUEGO, FECHA PROXIMO CONTACTO, HORA PROXIMO CONTACTO,
-   PROGRAMA, CARRERA, PROVINCIA, EDAD, MOTIVO DE NO INTERES,
-   OBSERVACION
    ========================================================= */
 function enviarASheets(r) {
   if (
@@ -804,16 +771,9 @@ function escapeHtml(str) {
 
 /* =========================================================
    LLAMADAS PROGRAMADAS PARA HOY (RECORDATORIOS)
-   ---------------------------------------------------------
-   Lee la hoja de cálculo (vía el Apps Script) y muestra
-   todas las filas de esta comercial cuya FECHA PROXIMO
-   CONTACTO sea igual a hoy. Al presionar "Llamar ahora",
-   el número pasa a la pestaña 1 listo para iniciar, y esa
-   línea desaparece de la lista (en pantalla).
    ========================================================= */
 
-// Números que ya se "llamaron ahora" hoy desde recordatorios.
-// Se ocultan de la lista aunque sigan en la hoja.
+
 let programadasOcultas = [];
 
 function cargarProgramadasHoy() {
@@ -833,8 +793,7 @@ function cargarProgramadasHoy() {
 
   const hoy = nowDate();
 
-  // Lectura por JSONP (esquiva la restricción CORS de Apps Script).
-  // Se crea un <script> que llama a la URL con un "callback".
+
   const cbName =
     "jsonp_programadas_" + Date.now() + "_" +
     Math.floor(Math.random() * 100000);
@@ -850,7 +809,7 @@ function cargarProgramadasHoy() {
     try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
   }
 
-  // Función global temporal que el Apps Script "ejecutará".
+
   window[cbName] = function (data) {
     limpiar();
     procesarProgramadas(data, { sub, body, vacio, badge });
@@ -872,7 +831,7 @@ function cargarProgramadasHoy() {
       "Error de conexión al leer la hoja. Revisa tu internet e inténtalo otra vez.";
   };
 
-  // Si en 15 s no respondió, avisar.
+
   timeoutId = setTimeout(function () {
     limpiar();
     sub.textContent =
@@ -892,7 +851,7 @@ function procesarProgramadas(data, ui) {
     return;
   }
 
-  // Filtrar las que ya se llamaron desde aquí hoy.
+
   const items = (data.items || []).filter(
     (it) => programadasOcultas.indexOf(it.contacto) === -1
   );
@@ -910,7 +869,7 @@ function procesarProgramadas(data, ui) {
       ? "Tienes 1 llamada programada para hoy."
       : "Tienes " + items.length + " llamadas programadas para hoy.";
 
-  // Ordenar por hora tentativa (texto; vacías al final).
+
   items.sort((a, b) => {
     if (!a.horaProx) return 1;
     if (!b.horaProx) return -1;
@@ -938,7 +897,6 @@ function procesarProgramadas(data, ui) {
     })
     .join("");
 
-  // Conectar botones "Llamar ahora".
   body.querySelectorAll(".btn-llamar-ahora").forEach((btn) => {
     btn.addEventListener("click", () => {
       const num = btn.dataset.num;
@@ -953,10 +911,9 @@ function llamarAhoraDesdeRecordatorio(numero) {
     programadasOcultas.push(numero);
   }
 
-  // Ir a la pestaña 1 (Registrar nueva llamada).
   document.querySelector('.tab[data-tab="register"]').click();
 
-  // Poner el número en el campo y habilitar "Iniciar llamada".
+  
   const inp = document.getElementById("inputContacto");
   inp.value = String(numero).replace(/\D/g, "").slice(0, 9);
   // Disparar la validación que habilita el botón.
@@ -965,8 +922,6 @@ function llamarAhoraDesdeRecordatorio(numero) {
 
   showToast("Número " + numero + " listo. Presiona “Iniciar llamada”.");
 }
-
-// Botón "Actualizar lista".
 const _btnRecargar = document.getElementById("btnRecargarProgramadas");
 if (_btnRecargar) {
   _btnRecargar.addEventListener("click", cargarProgramadasHoy);
@@ -975,7 +930,7 @@ if (_btnRecargar) {
 /* =========================================================
    INICIALIZACIÓN
    ========================================================= */
-cargarLocal();        // recupera lo registrado hoy (o reinicia si cambió el día)
+cargarLocal();        
 renderHistorial();
 updateGoalTracker();
 showStage("start");

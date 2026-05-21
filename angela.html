@@ -184,7 +184,7 @@
           <!-- Formulario en vivo -->
           <div class="card form-card live-form" id="liveForm">
             <div class="live-form-header">
-              <h3 class="live-form-title">Información de la conversación</h3>
+               <h3 class="live-form-title">Información del contacto</h3>
               <p class="live-form-sub">Llena estos campos mientras la conversación está activa.</p>
             </div>
 
@@ -239,7 +239,7 @@
                   <option value="">Seleccionar…</option>
                   <option>Administración</option>
                   <option>Negocios Internacionales</option>
-                  <option>Ingenieria Industrial</option>
+                  <option>Ingeniería Industrial</option>
                   <option>Administración Logística</option>
                   <option>Administración Industrial</option>
                   <option>Otra carrera afín</option>
@@ -251,14 +251,14 @@
 
             <div class="form-row">
               <div class="field">
-                <span class="field-label">¿de Provincia?</span>
+                <span class="field-label">¿Es de Provincia?</span>
                 <div class="chip-group" id="provinciaGroup">
                   <button type="button" class="chip chip-yes" data-value="Sí">Sí</button>
                   <button type="button" class="chip chip-no" data-value="No">No</button>
                 </div>
               </div>
               <div class="field">
-                <span class="field-label">¿del Segmento de edad? </span>
+                <span class="field-label">¿Es del Segmento de edad? </span>
                 <div class="chip-group" id="edadGroup">
                   <button type="button" class="chip chip-yes" data-value="Sí">Sí</button>
                   <button type="button" class="chip chip-no" data-value="No">No</button>
@@ -270,7 +270,7 @@
 
             <div class="form-row">
               <label class="field field-toggle">
-                <span class="field-label">¿Llamar luego? -> recordatorio</span>
+                <span class="field-label">¿Llamar luego? -> -> Generación de recordatorio</span>
                 <label class="switch">
                   <input type="checkbox" id="llamarLuego" />
                   <span class="slider"></span>
@@ -300,28 +300,28 @@
                     <option value="45">:45</option>
                   </select>
                   <select id="proxHoraYesAP" class="time-ap">
-                    <option>AM</option>
-                    <option selected>PM</option>
+                    <option>a.m.</option>
+                    <option selected>p.m.</option>
                   </select>
                 </div>
               </div>
             </div>
 
             <label class="field" id="nombreRefWrap">
-              <span class="field-label">Nombre o referencia (opcional)</span>
-              <input type="text" id="nombreRef" placeholder="Ej. Sr. Pérez, mamá del postulante…" />
+              <span class="field-label">Nombre de referencia</span>
+              <input type="text" id="nombreRef" placeholder="Ej. Juan Pérez, Juanita Perez ..." />
             </label>
 
-            <div class="section-divider"><span>Sin interés actualmente </span></div>
+            <div class="section-divider"><span>Si no muestra interés </span></div>
 
             <label class="field">
-              <span class="field-label">Motivo de no interés</span>
+              <span class="field-label">Motivo</span>
               <select id="motivoNoInteres">
                 <option value="">Seleccionar…</option>
-                <option value="Ubicación (provincia)">Ubicación (provincia)</option>
-                <option value="Costo del programa (muy caro)">Costo del programa (muy caro)</option>
-                <option value="Falta de tiempo (horarios no cuadran)">Falta de tiempo (horarios no cuadran)</option>
-                <option value="Consiguió trabajo">Consiguió trabajo</option>
+                <option value="Por la ubicación (es de provincia)">Ubicación (provincia)</option>
+                <option value="Por el costo del programa (está muy caro)">Costo del programa (muy caro)</option>
+                <option value="Por la falta de tiempo (los horarios no le cuadran)">Falta de tiempo (horarios no cuadran)</option>
+                <option value="Porque consiguió trabajo">Consiguió trabajo</option>
                 <option value="Otros">Otros</option>
               </select>
             </label>
@@ -348,7 +348,7 @@
             </div>
 
             <label class="field field-toggle">
-              <span class="field-label">¿Volver a llamar?</span>
+              <span class="field-label">¿Volver a llamar? -> Generación de recordatorio</span>
               <label class="switch">
                 <input type="checkbox" id="volverLlamar" checked />
                 <span class="slider"></span>
@@ -378,8 +378,8 @@
                     <option value="45">:45</option>
                   </select>
                   <select id="proxHoraNoAP" class="time-ap">
-                    <option>AM</option>
-                    <option selected>PM</option>
+                    <option>a.m.</option>
+                    <option selected>p.m.</option>
                   </select>
                 </div>
               </label>
@@ -467,7 +467,7 @@
         <div class="empty-state hidden" id="remindersEmpty">
           <div class="empty-icon">☎</div>
           <p>No hay llamadas programadas para hoy</p>
-          <span>Cuando marques “llamar luego” con fecha de hoy, aparecerán aquí.</span>
+          <span>Las llamadas programadas para hoy aparecerán aquí.</span>
         </div>
       </div>
     </section>
