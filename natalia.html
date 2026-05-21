@@ -307,6 +307,21 @@
               </div>
             </div>
 
+            <label class="field hidden" id="razonLlamadaWrap">
+              <span class="field-label" id="razonLlamadaLabel">
+                Razón
+                <span class="req-mark hidden" id="razonReqMark">*</span>
+              </span>
+              <select id="razonNuevaLlamada">
+                <option value="">Seleccionar…</option>
+              </select>
+            </label>
+
+            <label class="field hidden" id="razonOtrosWrap">
+              <span class="field-label">Especificar razón</span>
+              <input type="text" id="razonNuevaLlamadaOtros" placeholder="Escribe la razón…" />
+            </label>
+
             <label class="field" id="nombreRefWrap">
               <span class="field-label">Nombre de referencia</span>
               <input type="text" id="nombreRef" placeholder="Ej. Juan Pérez, Juanita Perez ..." />
@@ -458,7 +473,10 @@
               <th>Número</th>
               <th>Nombre de referencia</th>
               <th>Hora tentativa</th>
-              <th>Llamar</th>
+              <th>Razón</th>
+              <th>Situación</th>
+              <th>Estado</th>
+              <th>Acción</th>
             </tr>
           </thead>
           <tbody id="remindersBody"></tbody>

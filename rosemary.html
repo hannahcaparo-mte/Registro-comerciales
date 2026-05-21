@@ -184,7 +184,7 @@
           <!-- Formulario en vivo -->
           <div class="card form-card live-form" id="liveForm">
             <div class="live-form-header">
-               <h3 class="live-form-title">Información del contacto</h3>
+              <h3 class="live-form-title">Información del contacto</h3>
               <p class="live-form-sub">Llena estos campos mientras la conversación está activa.</p>
             </div>
 
@@ -270,7 +270,7 @@
 
             <div class="form-row">
               <label class="field field-toggle">
-                <span class="field-label">¿Llamar luego? -> -> Generación de recordatorio</span>
+                <span class="field-label">¿Llamar luego? -> Generación de recordatorio</span>
                 <label class="switch">
                   <input type="checkbox" id="llamarLuego" />
                   <span class="slider"></span>
@@ -307,6 +307,21 @@
               </div>
             </div>
 
+            <label class="field hidden" id="razonLlamadaWrap">
+              <span class="field-label" id="razonLlamadaLabel">
+                Razón
+                <span class="req-mark hidden" id="razonReqMark">*</span>
+              </span>
+              <select id="razonNuevaLlamada">
+                <option value="">Seleccionar…</option>
+              </select>
+            </label>
+
+            <label class="field hidden" id="razonOtrosWrap">
+              <span class="field-label">Especificar razón</span>
+              <input type="text" id="razonNuevaLlamadaOtros" placeholder="Escribe la razón…" />
+            </label>
+
             <label class="field" id="nombreRefWrap">
               <span class="field-label">Nombre de referencia</span>
               <input type="text" id="nombreRef" placeholder="Ej. Juan Pérez, Juanita Perez ..." />
@@ -318,7 +333,7 @@
               <span class="field-label">Motivo</span>
               <select id="motivoNoInteres">
                 <option value="">Seleccionar…</option>
-                <option value="Por la ubicación (es deprovincia)">Ubicación (provincia)</option>
+                <option value="Por la ubicación (es de provincia)">Ubicación (provincia)</option>
                 <option value="Por el costo del programa (está muy caro)">Costo del programa (muy caro)</option>
                 <option value="Por la falta de tiempo (los horarios no le cuadran)">Falta de tiempo (horarios no cuadran)</option>
                 <option value="Porque consiguió trabajo">Consiguió trabajo</option>
@@ -456,8 +471,11 @@
           <thead>
             <tr>
               <th>Número</th>
-              <th>Nombre / referencia</th>
+              <th>Nombre de referencia</th>
               <th>Hora tentativa</th>
+              <th>Razón</th>
+              <th>Situación</th>
+              <th>Estado</th>
               <th>Acción</th>
             </tr>
           </thead>

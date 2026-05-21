@@ -945,3 +945,69 @@ input, select, textarea { font-family: inherit; font-size: 14px; color: inherit;
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* =========================================================
+   ESTADOS DE LLAMADAS PROGRAMADAS (pestaña 03)
+   ========================================================= */
+.estado {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+.estado-por-llamar {
+  background: #FFF8E1;
+  color: #8a6500;
+  border: 1px solid #F2D27A;
+}
+.estado-llamando {
+  background: #E8F0FE;
+  color: #1A73E8;
+  border: 1px solid #A6C5F7;
+  animation: pulseSoft 1.6s ease-in-out infinite;
+}
+.estado-llamado {
+  background: #E6F4EA;
+  color: #1B7A3E;
+  border: 1px solid #9DD3B0;
+}
+.row-llamado td {
+  color: #6b7280;
+}
+.row-llamado .mono,
+.row-llamado strong { color: #6b7280; }
+.row-por-llamar td { background: #FFFCEF; }
+.row-llamando td { background: #F4F8FE; }
+
+#razonOtrosWrap,
+#razonLlamadaWrap,
+#razonLlamadaDivider {
+  animation: fadeSlide .22s ease;
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .55; }
+}
+
+.muted { color: #9ca3af; }
+
+/* Marcador de obligatorio (asterisco rojo) */
+.req-mark {
+  color: #D93025;
+  font-weight: bold;
+  margin-left: 4px;
+}
+
+/* Pulso de error al intentar guardar sin razón */
+.invalid-pulse {
+  animation: invalidPulse .8s ease;
+  border-color: #D93025 !important;
+}
+@keyframes invalidPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217,48,37,0); }
+  50%      { box-shadow: 0 0 0 5px rgba(217,48,37,.25); }
+}

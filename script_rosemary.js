@@ -1,5 +1,5 @@
 /* =========================================================
-   REGISTRO COMERCIAL · ROSEMARY
+   REGISTRO COMERCIAL · NATALIA
    ========================================================= */
 
 const COMERCIAL = "Rosemary";
@@ -44,6 +44,7 @@ const callState = {
   motivoNoInteres: "",
   observacion: "",
   nombre: "",
+  razonNuevaLlamada: "",
 };
 
 let timerInterval = null;
@@ -171,7 +172,8 @@ tabs.forEach((tab) => {
       p.classList.toggle("active", p.id === `panel-${target}`)
     );
     if (target === "reminders") {
-      cargarProgramadasHoy();
+      renderRecordatorios();      // instantáneo, con lo que ya hay
+      cargarProgramadasHoy();     // luego refresca con la hoja
     }
   });
 });
@@ -261,6 +263,7 @@ function resetCallState() {
     motivoNoInteres: "",
     observacion: "",
     nombre: "",
+    razonNuevaLlamada: "",
   });
 
   document.getElementById("inputContacto").value = "";
@@ -288,6 +291,15 @@ function resetCallState() {
   const _nr = document.getElementById("nombreRef");
   if (_nr) _nr.value = "";
 
+  // Razón de nueva llamada: limpiar y ocultar
+  const _rn = document.getElementById("razonNuevaLlamada");
+  const _ro = document.getElementById("razonNuevaLlamadaOtros");
+  if (_rn) _rn.value = "";
+  if (_ro) _ro.value = "";
+  document.getElementById("razonLlamadaWrap").classList.add("hidden");
+  document.getElementById("razonOtrosWrap").classList.add("hidden");
+  document.getElementById("razonReqMark").classList.add("hidden");
+
   document.querySelectorAll(".chip.selected").forEach((c) =>
     c.classList.remove("selected")
   );
@@ -302,12 +314,10 @@ function resetCallState() {
   document.getElementById("timerWrap1").classList.remove("active", "ended");
   document.getElementById("timerStatus").textContent = "Marcando…";
 
-
   document.getElementById("stageTag").textContent = "En curso";
   document.getElementById("stageTag").classList.remove("live");
   document.getElementById("stageTag").classList.add("pulse");
   document.getElementById("callingSub").textContent = "Esperando respuesta…";
-
 
   document.getElementById("liveForm").classList.remove("hidden");
   document.getElementById("noAnswerPanel").classList.add("hidden");
@@ -400,6 +410,11 @@ document.getElementById("btnNoContesto").addEventListener("click", () => {
 
   document.getElementById("liveForm").classList.add("hidden");
   document.getElementById("noAnswerPanel").classList.remove("hidden");
+
+  // Actualizar marcador de obligatoriedad de razón
+  if (typeof actualizarObligatoriedadRazon === "function") {
+    actualizarObligatoriedadRazon();
+  }
 });
 
 /* =========================================================
@@ -424,7 +439,13 @@ document.getElementById("btnRespondio").addEventListener("click", () => {
 
   document.getElementById("callingActions1").classList.add("hidden");
   document.getElementById("callingActions2").classList.remove("hidden");
+
+  // Actualizar marcador de obligatoriedad de razón (ahora contestó = Sí)
+  if (typeof actualizarObligatoriedadRazon === "function") {
+    actualizarObligatoriedadRazon();
+  }
 });
+
 
 document.getElementById("btnTerminar").addEventListener("click", () => {
   stopTimer();
@@ -484,6 +505,108 @@ motivoNoInteresSel.addEventListener("change", () => {
 });
 
 /* =========================================================
+   RAZÓN DE NUEVA LLAMADA — se muestra cuando se marca
+   "llamar luego = Sí" y se guarda con la llamada actual.
+   Cuando hay recordatorio, esta razón se mostrará al día
+   siguiente en la pestaña 03 como referencia.
+   ========================================================= */
+const razonNuevaLlamadaSel = document.getElementById("razonNuevaLlamada");
+const razonOtrosWrap = document.getElementById("razonOtrosWrap");
+if (razonNuevaLlamadaSel) {
+  razonNuevaLlamadaSel.addEventListener("change", () => {
+    if (razonNuevaLlamadaSel.value === "Otros") {
+      razonOtrosWrap.classList.remove("hidden");
+      document.getElementById("razonNuevaLlamadaOtros").focus();
+    } else {
+      razonOtrosWrap.classList.add("hidden");
+      document.getElementById("razonNuevaLlamadaOtros").value = "";
+    }
+  });
+}
+
+/* =========================================================
+   TOGGLE "Llamar luego" -> mostrar/ocultar bloque de razón
+   ---------------------------------------------------------
+   - Si llamarLuego = Sí: razón = por qué se va a volver a
+     llamar (no contestó, colgó, pidió que lo llamen, etc.)
+   - Si llamarLuego = No: razón = por qué no se hará seguimiento
+     (sin interés, petición de no llamar, ya llamado muchas
+     veces, etc.)
+   La razón es obligatoria solo cuando contestó = Sí.
+   ========================================================= */
+const llamarLuegoCheck = document.getElementById("llamarLuego");
+const razonLlamadaWrap = document.getElementById("razonLlamadaWrap");
+const razonLlamadaLabel = document.getElementById("razonLlamadaLabel");
+
+const OPCIONES_RAZON_SI = [
+  "No contestó",
+  "Pidió que lo vuelvan a llamar",
+  "Colgó",
+  "Quedaron en volver a comunicarse",
+  "Otros",
+];
+const OPCIONES_RAZON_NO = [
+  "Sin interés",
+  "Petición de no llamar",
+  "Ya llamado muchas veces",
+  "Otros",
+];
+
+function llenarOpcionesRazon(opciones, etiqueta) {
+  if (!razonNuevaLlamadaSel) return;
+  const valorActual = razonNuevaLlamadaSel.value;
+  razonNuevaLlamadaSel.innerHTML =
+    '<option value="">Seleccionar…</option>' +
+    opciones.map((o) => `<option value="${o}">${o}</option>`).join("");
+  // Conservar valor si todavía aplica a la nueva lista
+  if (opciones.indexOf(valorActual) !== -1) {
+    razonNuevaLlamadaSel.value = valorActual;
+  }
+  // Actualizar el label visible
+  if (razonLlamadaLabel) {
+    razonLlamadaLabel.innerHTML =
+      etiqueta + ' <span class="req-mark hidden" id="razonReqMark">*</span>';
+  }
+}
+
+function actualizarVisibilidadRazon() {
+  if (!llamarLuegoCheck) return;
+  const activo = llamarLuegoCheck.checked;
+  // Si llamarLuego está marcado -> opciones SI ("por qué se vuelve a llamar")
+  // Si NO está marcado          -> opciones NO ("por qué no se llama")
+  // Siempre se muestra el campo (porque queremos saber el motivo en ambos casos)
+  razonLlamadaWrap.classList.remove("hidden");
+  if (activo) {
+    llenarOpcionesRazon(OPCIONES_RAZON_SI, "Razón de la nueva llamada");
+  } else {
+    llenarOpcionesRazon(OPCIONES_RAZON_NO, "Razón por la que no se llamará");
+  }
+  // Si el valor cambió, ocultar el campo "Otros"
+  if (razonNuevaLlamadaSel.value !== "Otros") {
+    razonOtrosWrap.classList.add("hidden");
+    document.getElementById("razonNuevaLlamadaOtros").value = "";
+  }
+  actualizarObligatoriedadRazon();
+}
+
+// Razón obligatoria SOLO cuando contestó = Sí
+function actualizarObligatoriedadRazon() {
+  const contesto = callState.contesto === true;
+  const req = document.getElementById("razonReqMark");
+  if (!req) return;
+  if (contesto) req.classList.remove("hidden");
+  else req.classList.add("hidden");
+}
+
+if (llamarLuegoCheck) {
+  llamarLuegoCheck.addEventListener("change", actualizarVisibilidadRazon);
+}
+
+// Al cargar la página, inicializar con las opciones según el
+// estado por defecto del toggle (que arranca apagado = "No")
+actualizarVisibilidadRazon();
+
+/* =========================================================
    HORA
    ========================================================= */
 function composeTime(hourSel, minSel, ampmSel) {
@@ -496,7 +619,9 @@ function composeTime(hourSel, minSel, ampmSel) {
   if (ap === "PM" && h24 !== 12) h24 += 12;
   if (ap === "AM" && h24 === 12) h24 = 0;
 
-  return `${h}:${m} ${ap}`;
+  // Formato amable: "11:00 a.m."  /  "3:30 p.m."
+  const apTexto = ap === "PM" ? "p.m." : "a.m.";
+  return `${h}:${m} ${apTexto}`;
 }
 
 /* =========================================================
@@ -522,6 +647,19 @@ function recolectarFormularioEnVivo() {
   }
 
   callState.observacion = document.getElementById("Nota").value.trim();
+
+  // Razón de la nueva llamada (solo se rellena cuando viene
+  // del recordatorio; en otro caso queda en blanco).
+  const _rn = document.getElementById("razonNuevaLlamada");
+  if (_rn) {
+    const razonSel = _rn.value;
+    if (razonSel === "Otros") {
+      const otro = document.getElementById("razonNuevaLlamadaOtros").value.trim();
+      callState.razonNuevaLlamada = otro ? `Otros: ${otro}` : "Otros";
+    } else {
+      callState.razonNuevaLlamada = razonSel;
+    }
+  }
 }
 
 /* =========================================================
@@ -587,6 +725,26 @@ document.getElementById("btnCancelarYes").addEventListener("click", () => {
    GUARDAR LLAMADA EN HISTORIAL
    ========================================================= */
 function saveCall() {
+  // Validación: razón obligatoria cuando se contestó.
+  // (La razón es obligatoria sea "llamar luego" Sí o No, mientras
+  // haya habido conversación.)
+  if (callState.contesto === true) {
+    if (!callState.razonNuevaLlamada || callState.razonNuevaLlamada.trim() === "") {
+      showToast("Selecciona la razón antes de guardar", true);
+      const sel = document.getElementById("razonNuevaLlamada");
+      if (sel) { sel.focus(); sel.classList.add("invalid-pulse"); setTimeout(() => sel.classList.remove("invalid-pulse"), 1500); }
+      return;
+    }
+    if (callState.razonNuevaLlamada === "Otros") {
+      const otro = document.getElementById("razonNuevaLlamadaOtros").value.trim();
+      if (!otro) {
+        showToast("Escribe la razón en 'Otros'", true);
+        document.getElementById("razonNuevaLlamadaOtros").focus();
+        return;
+      }
+    }
+  }
+
   const registro = {
     id: Date.now(),
     comercial: COMERCIAL,
@@ -611,6 +769,7 @@ function saveCall() {
     motivoNoInteres: callState.motivoNoInteres,
     observacion: callState.observacion,
     nombre: callState.nombre,
+    razonNuevaLlamada: callState.razonNuevaLlamada,
     volverLlamar: callState.volverLlamar ? "Sí" : "No",
     timestamp: new Date().toISOString(),
   };
@@ -624,6 +783,12 @@ function saveCall() {
   // 🔌 ENVÍO INSTANTÁNEO A GOOGLE SHEETS
   // ============================================================
   enviarASheets(registro);
+
+  // Si esta llamada vino de un recordatorio, marcarlo como "llamado".
+  if (recordatorioActivo) {
+    marcarRecordatorioLlamado(recordatorioActivo, registro);
+    recordatorioActivo = null;
+  }
 
   showToast("Llamada registrada");
   resetCallState();
@@ -670,6 +835,7 @@ function enviarASheets(r) {
     edad: r.edad,
     motivoNoInteres: r.motivoNoInteres,
     observacion: r.observacion,
+    razonNuevaLlamada: r.razonNuevaLlamada || "",
   };
 
   fetch(SHEETS_WEBAPP_URL, {
@@ -771,10 +937,54 @@ function escapeHtml(str) {
 
 /* =========================================================
    LLAMADAS PROGRAMADAS PARA HOY (RECORDATORIOS)
+   ---------------------------------------------------------
+   La lista es PERSISTENTE: cada fila tiene un estado:
+     - "por_llamar" (estado inicial al cargar)
+     - "llamando"   (cuando se presiona Llamar ahora)
+     - "llamado"    (cuando se guarda la llamada)
+   Al refrescar, NO se borra: se MERGE la información nueva
+   manteniendo los estados ya marcados como "llamando"/"llamado".
    ========================================================= */
 
-let programadasOcultas = [];
+// Mapa de items mostrados: rowId -> {item, estado}
+const recordatoriosUI = new Map();
 
+// Item activo en este momento (de qué recordatorio venimos)
+let recordatorioActivo = null;
+
+// Clave para localStorage (sobrevive a recargas)
+const STORAGE_REMINDERS = STORAGE_KEY + "_reminders";
+
+// ---------- persistencia local de la lista ----------
+function guardarEstadosRecordatorios() {
+  try {
+    const data = { fecha: nowDate(), items: [] };
+    recordatoriosUI.forEach((v) => {
+      data.items.push({ item: v.item, estado: v.estado });
+    });
+    localStorage.setItem(STORAGE_REMINDERS, JSON.stringify(data));
+  } catch (e) { console.warn(e); }
+}
+
+function cargarEstadosRecordatorios() {
+  try {
+    const raw = localStorage.getItem(STORAGE_REMINDERS);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    // Si cambió el día, descartar y empezar limpio.
+    if (data.fecha !== nowDate()) {
+      localStorage.removeItem(STORAGE_REMINDERS);
+      return;
+    }
+    (data.items || []).forEach((d) => {
+      if (d.item && d.item.rowId) {
+        recordatoriosUI.set(d.item.rowId, { item: d.item, estado: d.estado });
+      }
+    });
+  } catch (e) { console.warn(e); }
+}
+
+// ---------- cargar de la hoja ----------
 function cargarProgramadasHoy() {
   const sub = document.getElementById("remindersSub");
   const body = document.getElementById("remindersBody");
@@ -786,13 +996,10 @@ function cargarProgramadasHoy() {
     return;
   }
 
+  // Si ya hay items en pantalla, no borramos: solo decimos cargando.
   sub.textContent = "Cargando llamadas programadas…";
-  body.innerHTML = "";
-  vacio.classList.add("hidden");
 
   const hoy = nowDate();
-
- 
   const cbName =
     "jsonp_programadas_" + Date.now() + "_" +
     Math.floor(Math.random() * 100000);
@@ -807,7 +1014,6 @@ function cargarProgramadasHoy() {
     }
     try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
   }
-
 
   window[cbName] = function (data) {
     limpiar();
@@ -830,7 +1036,6 @@ function cargarProgramadasHoy() {
       "Error de conexión al leer la hoja. Revisa tu internet e inténtalo otra vez.";
   };
 
-  // Si en 15 s no respondió, avisar.
   timeoutId = setTimeout(function () {
     limpiar();
     sub.textContent =
@@ -840,6 +1045,7 @@ function cargarProgramadasHoy() {
   document.body.appendChild(scriptTag);
 }
 
+// ---------- procesar respuesta y MERGEAR con lo que ya hay ----------
 function procesarProgramadas(data, ui) {
   const { sub, body, vacio, badge } = ui;
 
@@ -850,77 +1056,172 @@ function procesarProgramadas(data, ui) {
     return;
   }
 
+  const nuevos = data.items || [];
 
-  const items = (data.items || []).filter(
-    (it) => programadasOcultas.indexOf(it.contacto) === -1
-  );
+  // MERGE:
+  //  - Items que llegan nuevos: si no estaban, se agregan como "por_llamar".
+  //  - Items que ya estaban (con estado llamando/llamado): se mantienen.
+  //  - Items que estaban como "por_llamar" pero ya no llegan: se quitan.
+  const idsNuevos = new Set(nuevos.map((it) => it.rowId));
+  const aBorrar = [];
+  recordatoriosUI.forEach((v, rowId) => {
+    if (!idsNuevos.has(rowId) && v.estado === "por_llamar") {
+      aBorrar.push(rowId);
+    }
+  });
+  aBorrar.forEach((id) => recordatoriosUI.delete(id));
 
-  badge.textContent = items.length;
+  nuevos.forEach((it) => {
+    if (!recordatoriosUI.has(it.rowId)) {
+      recordatoriosUI.set(it.rowId, { item: it, estado: "por_llamar" });
+    } else {
+      // Refrescar el item por si la hoja cambió, pero mantener el estado.
+      const prev = recordatoriosUI.get(it.rowId);
+      recordatoriosUI.set(it.rowId, { item: it, estado: prev.estado });
+    }
+  });
 
-  if (items.length === 0) {
-    sub.textContent = "No tienes llamadas programadas pendientes para hoy.";
+  guardarEstadosRecordatorios();
+  renderRecordatorios();
+}
+
+// ---------- pintar la tabla ----------
+function renderRecordatorios() {
+  const sub = document.getElementById("remindersSub");
+  const body = document.getElementById("remindersBody");
+  const vacio = document.getElementById("remindersEmpty");
+  const badge = document.getElementById("remindersCount");
+
+  // Convertir a array y ordenar:
+  //  1) "por_llamar" arriba; 2) "llamando"; 3) "llamado" abajo
+  //  Dentro de cada grupo, por hora tentativa.
+  // Convertir hora tipo "11:00 a.m." a minutos totales del día (0-1439)
+  // para ordenar cronológicamente. Si no se puede parsear, va al final.
+  function horaAMinutos(s) {
+    if (!s) return 99999;
+    const m = String(s).trim().toLowerCase()
+      .match(/^(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?|am|pm)?$/i);
+    if (!m) return 99999;
+    let h = parseInt(m[1], 10);
+    const min = parseInt(m[2], 10);
+    const ap = (m[3] || "").replace(/\./g, "");
+    if (ap === "pm" && h !== 12) h += 12;
+    if (ap === "am" && h === 12) h = 0;
+    return h * 60 + min;
+  }
+
+  const ordenEstado = { por_llamar: 0, llamando: 1, llamado: 2 };
+  const todos = Array.from(recordatoriosUI.values()).sort((a, b) => {
+    const e = (ordenEstado[a.estado] ?? 99) - (ordenEstado[b.estado] ?? 99);
+    if (e !== 0) return e;
+    return horaAMinutos(a.item.horaProx) - horaAMinutos(b.item.horaProx);
+  });
+
+  // Contador del badge = solo "por_llamar"
+  const pendientes = todos.filter((x) => x.estado === "por_llamar").length;
+  badge.textContent = pendientes;
+
+  if (todos.length === 0) {
+    sub.textContent = "No tienes llamadas programadas para hoy.";
+    body.innerHTML = "";
     vacio.classList.remove("hidden");
     return;
   }
+  vacio.classList.add("hidden");
 
   sub.textContent =
-    items.length === 1
-      ? "Tienes 1 llamada programada para hoy."
-      : "Tienes " + items.length + " llamadas programadas para hoy.";
+    pendientes === 0
+      ? "Todas las llamadas programadas de hoy ya fueron realizadas."
+      : pendientes === 1
+      ? "Tienes 1 llamada pendiente."
+      : "Tienes " + pendientes + " llamadas pendientes.";
 
+  body.innerHTML = todos
+    .map(({ item, estado }) => {
+      const numero = escapeHtml(item.contacto);
+      const nombre = escapeHtml(item.nombre) || "—";
+      const hora = escapeHtml(item.horaProx) || "—";
+      const razon = escapeHtml(item.razon) || "—";
+      const situacion = escapeHtml(item.situacionActual || "1ra llamada");
 
-  items.sort((a, b) => {
-    if (!a.horaProx) return 1;
-    if (!b.horaProx) return -1;
-    return String(a.horaProx).localeCompare(String(b.horaProx));
-  });
+      let estadoHtml, accionHtml, rowClass;
+      if (estado === "llamado") {
+        rowClass = "row-llamado";
+        estadoHtml = '<span class="estado estado-llamado">✓ Llamado</span>';
+        accionHtml = '<span class="muted">—</span>';
+      } else if (estado === "llamando") {
+        rowClass = "row-llamando";
+        estadoHtml = '<span class="estado estado-llamando">⏳ Llamando</span>';
+        accionHtml = `<button class="btn btn-secondary btn-llamar-ahora" data-row="${item.rowId}" type="button">Reintentar</button>`;
+      } else {
+        rowClass = "row-por-llamar";
+        estadoHtml = '<span class="estado estado-por-llamar">Por llamar</span>';
+        accionHtml = `<button class="btn btn-primary btn-llamar-ahora" data-row="${item.rowId}" type="button">Llamar ahora</button>`;
+      }
 
-  body.innerHTML = items
-    .map((it) => {
-      const numero = escapeHtml(it.contacto);
-      const nombre = escapeHtml(it.nombre) || "—";
-      const hora = escapeHtml(it.horaProx) || "—";
       return `
-        <tr>
+        <tr class="${rowClass}">
           <td><strong class="mono">${numero}</strong></td>
           <td>${nombre}</td>
           <td class="mono">${hora}</td>
-          <td>
-            <button class="btn btn-primary btn-llamar-ahora"
-                    data-num="${numero}" type="button">
-              Llamar ahora
-            </button>
-          </td>
+          <td>${razon}</td>
+          <td>${situacion}</td>
+          <td>${estadoHtml}</td>
+          <td>${accionHtml}</td>
         </tr>
       `;
     })
     .join("");
 
-
   body.querySelectorAll(".btn-llamar-ahora").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const num = btn.dataset.num;
-      llamarAhoraDesdeRecordatorio(num);
+      const rowId = parseInt(btn.dataset.row, 10);
+      llamarAhoraDesdeRecordatorio(rowId);
     });
   });
 }
 
-function llamarAhoraDesdeRecordatorio(numero) {
-  // Ocultar esta línea de la lista (ya se va a llamar).
-  if (programadasOcultas.indexOf(numero) === -1) {
-    programadasOcultas.push(numero);
-  }
+// ---------- al presionar "Llamar ahora" ----------
+function llamarAhoraDesdeRecordatorio(rowId) {
+  const r = recordatoriosUI.get(rowId);
+  if (!r) return;
 
+  // Marcar como "llamando" y guardar
+  r.estado = "llamando";
+  recordatoriosUI.set(rowId, r);
+  recordatorioActivo = rowId;
+  guardarEstadosRecordatorios();
+  renderRecordatorios();
+
+  // Ir a la pestaña 01 y poner el número
   document.querySelector('.tab[data-tab="register"]').click();
 
-  // Poner el número en el campo y habilitar "Iniciar llamada".
   const inp = document.getElementById("inputContacto");
-  inp.value = String(numero).replace(/\D/g, "").slice(0, 9);
-  // Disparar la validación que habilita el botón.
+  inp.value = String(r.item.contacto).replace(/\D/g, "").slice(0, 9);
   inp.dispatchEvent(new Event("input", { bubbles: true }));
   inp.focus();
 
-  showToast("Número " + numero + " listo. Presiona “Iniciar llamada”.");
+  // Si hay nombre en el recordatorio, prellenarlo
+  const _nr = document.getElementById("nombreRef");
+  if (_nr && r.item.nombre) _nr.value = r.item.nombre;
+
+  // NOTA: la "razón de la nueva llamada" NO se pide aquí.
+  // Ya fue registrada en la llamada original (cuando se marcó
+  // "llamar luego = Sí") y se mostró en la pestaña 03 como
+  // referencia. Por eso aquí solo dejamos el campo oculto.
+
+  showToast("Número " + r.item.contacto + " listo. Presiona “Iniciar llamada”.");
+}
+
+// ---------- al guardar la llamada, marcar como "llamado" ----------
+function marcarRecordatorioLlamado(rowId, registro) {
+  const r = recordatoriosUI.get(rowId);
+  if (!r) return;
+  r.estado = "llamado";
+  recordatoriosUI.set(rowId, r);
+  guardarEstadosRecordatorios();
+  // Si la pestaña 03 está visible, actualizar inmediatamente
+  renderRecordatorios();
 }
 
 const _btnRecargar = document.getElementById("btnRecargarProgramadas");
@@ -931,7 +1232,8 @@ if (_btnRecargar) {
 /* =========================================================
    INICIALIZACIÓN
    ========================================================= */
-cargarLocal();        
+cargarLocal();
+cargarEstadosRecordatorios();   // recordatorios "llamando/llamado" persistidos
 renderHistorial();
 updateGoalTracker();
 showStage("start");
