@@ -307,7 +307,7 @@
               </div>
             </div>
 
-            <label class="field hidden" id="razonLlamadaWrap">
+            <label class="field" id="razonLlamadaWrap">
               <span class="field-label" id="razonLlamadaLabel">
                 Razón
                 <span class="req-mark hidden" id="razonReqMark">*</span>
@@ -344,6 +344,17 @@
             <label class="field hidden" id="motivoOtrosWrap">
               <span class="field-label">Especificar otro motivo</span>
               <input type="text" id="motivoNoInteresOtros" placeholder="Escribe el motivo…" />
+            </label>
+
+            <div class="section-divider"><span>Resultado de la llamada</span></div>
+
+            <label class="field">
+              <span class="field-label">Venta cerrada</span>
+              <div class="chip-group" id="ventaCerradaGroup" data-name="ventaCerrada">
+                <button type="button" class="chip" data-value="Sí">Sí</button>
+                <button type="button" class="chip" data-value="No">No</button>
+                <button type="button" class="chip" data-value="Casi">Casi</button>
+              </div>
             </label>
 
             <div class="section-divider"><span>Observaciones</span></div>
@@ -399,6 +410,20 @@
                 </div>
               </label>
             </div>
+
+            <label class="field" id="razonLlamadaWrapNo">
+              <span class="field-label" id="razonLlamadaLabelNo">
+                Razón
+              </span>
+              <select id="razonNuevaLlamadaNo">
+                <option value="">Seleccionar…</option>
+              </select>
+            </label>
+
+            <label class="field hidden" id="razonOtrosWrapNo">
+              <span class="field-label">Especificar razón</span>
+              <input type="text" id="razonNuevaLlamadaOtrosNo" placeholder="Escribe la razón…" />
+            </label>
 
             <div class="no-answer-actions">
               <button class="btn btn-primary btn-block" id="btnGuardarNo">

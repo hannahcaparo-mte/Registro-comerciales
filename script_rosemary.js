@@ -45,6 +45,7 @@ const callState = {
   observacion: "",
   nombre: "",
   razonNuevaLlamada: "",
+  ventaCerrada: "",
 };
 
 let timerInterval = null;
@@ -264,6 +265,7 @@ function resetCallState() {
     observacion: "",
     nombre: "",
     razonNuevaLlamada: "",
+    ventaCerrada: "",
   });
 
   document.getElementById("inputContacto").value = "";
@@ -291,14 +293,20 @@ function resetCallState() {
   const _nr = document.getElementById("nombreRef");
   if (_nr) _nr.value = "";
 
-  // Razón de nueva llamada: limpiar y ocultar
+  // Razón de nueva llamada: limpiar valores (el bloque queda visible)
   const _rn = document.getElementById("razonNuevaLlamada");
   const _ro = document.getElementById("razonNuevaLlamadaOtros");
+  const _rnNo = document.getElementById("razonNuevaLlamadaNo");
+  const _roNo = document.getElementById("razonNuevaLlamadaOtrosNo");
   if (_rn) _rn.value = "";
   if (_ro) _ro.value = "";
-  document.getElementById("razonLlamadaWrap").classList.add("hidden");
+  if (_rnNo) _rnNo.value = "";
+  if (_roNo) _roNo.value = "";
   document.getElementById("razonOtrosWrap").classList.add("hidden");
-  document.getElementById("razonReqMark").classList.add("hidden");
+  const _roWrapNo = document.getElementById("razonOtrosWrapNo");
+  if (_roWrapNo) _roWrapNo.classList.add("hidden");
+  const _reqMark = document.getElementById("razonReqMark");
+  if (_reqMark) _reqMark.classList.add("hidden");
 
   document.querySelectorAll(".chip.selected").forEach((c) =>
     c.classList.remove("selected")
@@ -488,6 +496,7 @@ setupChipGroup("interesGroup", (val) => { callState.interes = val; });
 setupChipGroup("calidadGroup", (val) => { callState.calidadLead = val; });
 setupChipGroup("provinciaGroup", (val) => { callState.provincia = val; });
 setupChipGroup("edadGroup", (val) => { callState.edad = val; });
+setupChipGroup("ventaCerradaGroup", (val) => { callState.ventaCerrada = val; });
 
 /* =========================================================
    MOTIVO DE NO INTERÉS 
@@ -505,38 +514,13 @@ motivoNoInteresSel.addEventListener("change", () => {
 });
 
 /* =========================================================
-   RAZÓN DE NUEVA LLAMADA — se muestra cuando se marca
-   "llamar luego = Sí" y se guarda con la llamada actual.
-   Cuando hay recordatorio, esta razón se mostrará al día
-   siguiente en la pestaña 03 como referencia.
+   RAZÓN DE NUEVA LLAMADA — se muestra siempre (no hidden).
+   Cambia de opciones según el toggle "Llamar luego" / "Volver
+   a llamar". Hay dos pares de elementos:
+     - razonNuevaLlamada / razonNuevaLlamadaOtros / razonOtrosWrap   (lado: sí contestó)
+     - razonNuevaLlamadaNo / razonNuevaLlamadaOtrosNo / razonOtrosWrapNo (lado: no contestó)
    ========================================================= */
-const razonNuevaLlamadaSel = document.getElementById("razonNuevaLlamada");
 const razonOtrosWrap = document.getElementById("razonOtrosWrap");
-if (razonNuevaLlamadaSel) {
-  razonNuevaLlamadaSel.addEventListener("change", () => {
-    if (razonNuevaLlamadaSel.value === "Otros") {
-      razonOtrosWrap.classList.remove("hidden");
-      document.getElementById("razonNuevaLlamadaOtros").focus();
-    } else {
-      razonOtrosWrap.classList.add("hidden");
-      document.getElementById("razonNuevaLlamadaOtros").value = "";
-    }
-  });
-}
-
-/* =========================================================
-   TOGGLE "Llamar luego" -> mostrar/ocultar bloque de razón
-   ---------------------------------------------------------
-   - Si llamarLuego = Sí: razón = por qué se va a volver a
-     llamar (no contestó, colgó, pidió que lo llamen, etc.)
-   - Si llamarLuego = No: razón = por qué no se hará seguimiento
-     (sin interés, petición de no llamar, ya llamado muchas
-     veces, etc.)
-   La razón es obligatoria solo cuando contestó = Sí.
-   ========================================================= */
-const llamarLuegoCheck = document.getElementById("llamarLuego");
-const razonLlamadaWrap = document.getElementById("razonLlamadaWrap");
-const razonLlamadaLabel = document.getElementById("razonLlamadaLabel");
 
 const OPCIONES_RAZON_SI = [
   "No contestó",
@@ -552,41 +536,83 @@ const OPCIONES_RAZON_NO = [
   "Otros",
 ];
 
-function llenarOpcionesRazon(opciones, etiqueta) {
-  if (!razonNuevaLlamadaSel) return;
-  const valorActual = razonNuevaLlamadaSel.value;
-  razonNuevaLlamadaSel.innerHTML =
+// Llenar opciones de un <select> y actualizar su label.
+function llenarOpcionesRazonEn(selectId, labelId, opciones, etiquetaTexto, mantieneReqMark) {
+  const sel = document.getElementById(selectId);
+  const lbl = document.getElementById(labelId);
+  if (!sel) return;
+  const valorActual = sel.value;
+  sel.innerHTML =
     '<option value="">Seleccionar…</option>' +
     opciones.map((o) => `<option value="${o}">${o}</option>`).join("");
-  // Conservar valor si todavía aplica a la nueva lista
-  if (opciones.indexOf(valorActual) !== -1) {
-    razonNuevaLlamadaSel.value = valorActual;
-  }
-  // Actualizar el label visible
-  if (razonLlamadaLabel) {
-    razonLlamadaLabel.innerHTML =
-      etiqueta + ' <span class="req-mark hidden" id="razonReqMark">*</span>';
+  if (opciones.indexOf(valorActual) !== -1) sel.value = valorActual;
+  if (lbl) {
+    lbl.innerHTML = etiquetaTexto +
+      (mantieneReqMark ? ' <span class="req-mark hidden" id="razonReqMark">*</span>' : "");
   }
 }
 
-function actualizarVisibilidadRazon() {
-  if (!llamarLuegoCheck) return;
-  const activo = llamarLuegoCheck.checked;
-  // Si llamarLuego está marcado -> opciones SI ("por qué se vuelve a llamar")
-  // Si NO está marcado          -> opciones NO ("por qué no se llama")
-  // Siempre se muestra el campo (porque queremos saber el motivo en ambos casos)
-  razonLlamadaWrap.classList.remove("hidden");
-  if (activo) {
-    llenarOpcionesRazon(OPCIONES_RAZON_SI, "Razón de la nueva llamada");
-  } else {
-    llenarOpcionesRazon(OPCIONES_RAZON_NO, "Razón por la que no se llamará");
-  }
-  // Si el valor cambió, ocultar el campo "Otros"
-  if (razonNuevaLlamadaSel.value !== "Otros") {
+// Listener cambio de select -> mostrar/ocultar campo "Otros"
+function bindRazonOtros(selectId, wrapOtrosId, inputOtrosId) {
+  const sel = document.getElementById(selectId);
+  const wrap = document.getElementById(wrapOtrosId);
+  if (!sel || !wrap) return;
+  sel.addEventListener("change", () => {
+    if (sel.value === "Otros") {
+      wrap.classList.remove("hidden");
+      document.getElementById(inputOtrosId).focus();
+    } else {
+      wrap.classList.add("hidden");
+      document.getElementById(inputOtrosId).value = "";
+    }
+  });
+}
+bindRazonOtros("razonNuevaLlamada", "razonOtrosWrap", "razonNuevaLlamadaOtros");
+bindRazonOtros("razonNuevaLlamadaNo", "razonOtrosWrapNo", "razonNuevaLlamadaOtrosNo");
+
+// LADO "SÍ CONTESTÓ": toggle llamarLuego
+const llamarLuegoCheck = document.getElementById("llamarLuego");
+function actualizarRazonSi() {
+  const activo = llamarLuegoCheck && llamarLuegoCheck.checked;
+  llenarOpcionesRazonEn(
+    "razonNuevaLlamada",
+    "razonLlamadaLabel",
+    activo ? OPCIONES_RAZON_SI : OPCIONES_RAZON_NO,
+    activo ? "Razón de la nueva llamada" : "Razón por la que no se llamará",
+    true   // mantener marca *
+  );
+  // Si el valor activo no es "Otros", esconder el wrap
+  const sel = document.getElementById("razonNuevaLlamada");
+  if (sel && sel.value !== "Otros") {
     razonOtrosWrap.classList.add("hidden");
     document.getElementById("razonNuevaLlamadaOtros").value = "";
   }
   actualizarObligatoriedadRazon();
+}
+if (llamarLuegoCheck) {
+  llamarLuegoCheck.addEventListener("change", actualizarRazonSi);
+}
+
+// LADO "NO CONTESTÓ": toggle volverLlamar
+const volverLlamarCheck = document.getElementById("volverLlamar");
+function actualizarRazonNo() {
+  const activo = volverLlamarCheck && volverLlamarCheck.checked;
+  llenarOpcionesRazonEn(
+    "razonNuevaLlamadaNo",
+    "razonLlamadaLabelNo",
+    activo ? OPCIONES_RAZON_SI : OPCIONES_RAZON_NO,
+    activo ? "Razón de la nueva llamada" : "Razón por la que no se llamará",
+    false   // este lado nunca es obligatorio (no contestó)
+  );
+  const sel = document.getElementById("razonNuevaLlamadaNo");
+  const wrap = document.getElementById("razonOtrosWrapNo");
+  if (sel && wrap && sel.value !== "Otros") {
+    wrap.classList.add("hidden");
+    document.getElementById("razonNuevaLlamadaOtrosNo").value = "";
+  }
+}
+if (volverLlamarCheck) {
+  volverLlamarCheck.addEventListener("change", actualizarRazonNo);
 }
 
 // Razón obligatoria SOLO cuando contestó = Sí
@@ -598,13 +624,9 @@ function actualizarObligatoriedadRazon() {
   else req.classList.add("hidden");
 }
 
-if (llamarLuegoCheck) {
-  llamarLuegoCheck.addEventListener("change", actualizarVisibilidadRazon);
-}
-
-// Al cargar la página, inicializar con las opciones según el
-// estado por defecto del toggle (que arranca apagado = "No")
-actualizarVisibilidadRazon();
+// Inicializar ambos lados con las opciones por defecto
+actualizarRazonSi();
+actualizarRazonNo();
 
 /* =========================================================
    HORA
@@ -681,6 +703,9 @@ document.getElementById("btnGuardarNo").addEventListener("click", () => {
   }
 
   callState.volverLlamar = volverLlamarToggle.checked;
+  // También usar este toggle como "llamarLuego" en la hoja
+  callState.llamarLuego = volverLlamarToggle.checked;
+
   if (callState.volverLlamar) {
     callState.fechaProxContacto = document.getElementById("proxContactoNo").value;
     callState.horaProxContacto = composeTime("proxHoraNoH", "proxHoraNoM", "proxHoraNoAP");
@@ -688,6 +713,22 @@ document.getElementById("btnGuardarNo").addEventListener("click", () => {
     callState.fechaProxContacto = "";
     callState.horaProxContacto = "";
   }
+
+  // Capturar razón del select del lado "no contestó"
+  const _rnNo = document.getElementById("razonNuevaLlamadaNo");
+  if (_rnNo) {
+    const razonSel = _rnNo.value;
+    if (razonSel === "Otros") {
+      const otro = document.getElementById("razonNuevaLlamadaOtrosNo").value.trim();
+      callState.razonNuevaLlamada = otro ? `Otros: ${otro}` : "Otros";
+    } else {
+      callState.razonNuevaLlamada = razonSel;
+    }
+  }
+
+  // Capturar la observación de este panel también
+  const notaNo = document.getElementById("Nota");
+  if (notaNo) callState.observacion = notaNo.value.trim();
 
   saveCall();
 });
@@ -770,6 +811,7 @@ function saveCall() {
     observacion: callState.observacion,
     nombre: callState.nombre,
     razonNuevaLlamada: callState.razonNuevaLlamada,
+    ventaCerrada: callState.ventaCerrada || "",
     volverLlamar: callState.volverLlamar ? "Sí" : "No",
     timestamp: new Date().toISOString(),
   };
@@ -836,6 +878,7 @@ function enviarASheets(r) {
     motivoNoInteres: r.motivoNoInteres,
     observacion: r.observacion,
     razonNuevaLlamada: r.razonNuevaLlamada || "",
+    ventaCerrada: r.ventaCerrada || "",
   };
 
   fetch(SHEETS_WEBAPP_URL, {
