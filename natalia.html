@@ -103,9 +103,39 @@
             <span class="field-hint" id="contactoHint">Al momento de empezar a llamar presionar "Iniciar llamada"</span>
           </label>
 
+          <label class="field">
+            <span class="field-label">Tipo de llamada</span>
+            <select id="tipoLlamada">
+              <option value="Nuevo lead">Nuevo lead</option>
+              <option value="Cobranza">Cobranza</option>
+              <option value="Invitación a demo">Invitación a demo</option>
+            </select>
+          </label>
+
           <button class="btn btn-primary btn-lg" id="btnIniciar" disabled>
             <span class="btn-dot"></span>
             Iniciar llamada
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== ETAPA "PRÓXIMAMENTE" — para Cobranza / Demo ===== -->
+      <div class="stage hidden" id="stage-soon">
+        <div class="stage-header compact">
+          <span class="stage-tag">En construcción</span>
+          <h2 class="stage-title" id="soonTitle">Próximamente</h2>
+          <p class="stage-sub" id="soonSub">
+            El flujo para esta opción aún no está disponible.
+          </p>
+        </div>
+
+        <div class="card start-card soon-card">
+          <div class="soon-icon">🚧</div>
+          <p class="soon-text">
+            Este tipo de llamada se gestionará en otra herramienta más adelante.
+          </p>
+          <button class="btn btn-primary btn-lg btn-block" id="btnVolverInicio" type="button">
+            ← Volver al inicio
           </button>
         </div>
       </div>
@@ -310,7 +340,7 @@
             <label class="field" id="razonLlamadaWrap">
               <span class="field-label" id="razonLlamadaLabel">
                 Razón
-                <span class="req-mark hidden" id="razonReqMark">*</span>
+                <span class="req-mark" id="razonReqMark">*</span>
               </span>
               <select id="razonNuevaLlamada">
                 <option value="">Seleccionar…</option>
@@ -414,6 +444,7 @@
             <label class="field" id="razonLlamadaWrapNo">
               <span class="field-label" id="razonLlamadaLabelNo">
                 Razón
+                <span class="req-mark" id="razonReqMarkNo">*</span>
               </span>
               <select id="razonNuevaLlamadaNo">
                 <option value="">Seleccionar…</option>

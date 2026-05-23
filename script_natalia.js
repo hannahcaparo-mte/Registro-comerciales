@@ -185,6 +185,7 @@ tabs.forEach((tab) => {
 const stages = {
   start:   document.getElementById("stage-start"),
   calling: document.getElementById("stage-calling"),
+  soon:    document.getElementById("stage-soon"),
 };
 
 function showStage(name) {
@@ -382,6 +383,20 @@ btnIniciar.addEventListener("click", () => {
     return;
   }
 
+  // Verificar el tipo de llamada elegido.
+  // Cobranza / Invitación a demo -> pantalla "Próximamente",
+  // NO se registra nada en la hoja.
+  const tipo = document.getElementById("tipoLlamada").value;
+  if (tipo !== "Nuevo lead") {
+    document.getElementById("soonTitle").textContent =
+      tipo === "Cobranza"
+        ? "Cobranza — Próximamente"
+        : "Invitación a demo — Próximamente";
+    showStage("soon");
+    return;
+  }
+
+  // Flujo normal de Nuevo lead.
   callState.contacto = contacto;
   callState.fecha = nowDate();
   callState.horaInicio = nowTime();
@@ -392,6 +407,19 @@ btnIniciar.addEventListener("click", () => {
   startTimer();
   showStage("calling");
 });
+
+// Botón "Volver al inicio" de la pantalla próximamente
+const btnVolverInicio = document.getElementById("btnVolverInicio");
+if (btnVolverInicio) {
+  btnVolverInicio.addEventListener("click", () => {
+    // Limpiar el input y volver a la pantalla inicial
+    inputContacto.value = "";
+    document.getElementById("tipoLlamada").value = "Nuevo lead";
+    btnIniciar.disabled = true;
+    showStage("start");
+    inputContacto.focus();
+  });
+}
 
 /* =========================================================
    ESCENARIO 1: NO CONTESTÓ
@@ -547,8 +575,11 @@ function llenarOpcionesRazonEn(selectId, labelId, opciones, etiquetaTexto, manti
     opciones.map((o) => `<option value="${o}">${o}</option>`).join("");
   if (opciones.indexOf(valorActual) !== -1) sel.value = valorActual;
   if (lbl) {
+    // Mantener asterisco siempre (la razón es obligatoria en todos los casos).
+    const idMark = (labelId === "razonLlamadaLabelNo")
+      ? "razonReqMarkNo" : "razonReqMark";
     lbl.innerHTML = etiquetaTexto +
-      (mantieneReqMark ? ' <span class="req-mark hidden" id="razonReqMark">*</span>' : "");
+      ' <span class="req-mark" id="' + idMark + '">*</span>';
   }
 }
 
@@ -615,13 +646,13 @@ if (volverLlamarCheck) {
   volverLlamarCheck.addEventListener("change", actualizarRazonNo);
 }
 
-// Razón obligatoria SOLO cuando contestó = Sí
+// Razón obligatoria SIEMPRE (independientemente de si contestó)
 function actualizarObligatoriedadRazon() {
-  const contesto = callState.contesto === true;
+  // Mantener visible el asterisco siempre.
   const req = document.getElementById("razonReqMark");
-  if (!req) return;
-  if (contesto) req.classList.remove("hidden");
-  else req.classList.add("hidden");
+  if (req) req.classList.remove("hidden");
+  const reqNo = document.getElementById("razonReqMarkNo");
+  if (reqNo) reqNo.classList.remove("hidden");
 }
 
 // Inicializar ambos lados con las opciones por defecto
@@ -634,15 +665,19 @@ actualizarRazonNo();
 function composeTime(hourSel, minSel, ampmSel) {
   const h = document.getElementById(hourSel).value;
   const m = document.getElementById(minSel).value || "00";
-  const ap = document.getElementById(ampmSel).value;
+  const apRaw = document.getElementById(ampmSel).value;
   if (!h) return "";
 
+  // Normalizar el valor del selector: puede venir como "PM", "p.m.",
+  // "P.M.", etc. Detectamos si es PM por la letra 'p'.
+  const esPM = String(apRaw || "").toLowerCase().indexOf("p") !== -1;
+
   let h24 = parseInt(h, 10);
-  if (ap === "PM" && h24 !== 12) h24 += 12;
-  if (ap === "AM" && h24 === 12) h24 = 0;
+  if (esPM && h24 !== 12) h24 += 12;
+  if (!esPM && h24 === 12) h24 = 0;
 
   // Formato amable: "11:00 a.m."  /  "3:30 p.m."
-  const apTexto = ap === "PM" ? "p.m." : "a.m.";
+  const apTexto = esPM ? "p.m." : "a.m.";
   return `${h}:${m} ${apTexto}`;
 }
 
@@ -766,23 +801,31 @@ document.getElementById("btnCancelarYes").addEventListener("click", () => {
    GUARDAR LLAMADA EN HISTORIAL
    ========================================================= */
 function saveCall() {
-  // Validación: razón obligatoria cuando se contestó.
-  // (La razón es obligatoria sea "llamar luego" Sí o No, mientras
-  // haya habido conversación.)
-  if (callState.contesto === true) {
-    if (!callState.razonNuevaLlamada || callState.razonNuevaLlamada.trim() === "") {
-      showToast("Selecciona la razón antes de guardar", true);
-      const sel = document.getElementById("razonNuevaLlamada");
-      if (sel) { sel.focus(); sel.classList.add("invalid-pulse"); setTimeout(() => sel.classList.remove("invalid-pulse"), 1500); }
-      return;
+  // Validación: razón obligatoria SIEMPRE (sea sí o no contestó,
+  // sea Sí o No el toggle de llamar luego).
+  if (!callState.razonNuevaLlamada || callState.razonNuevaLlamada.trim() === "") {
+    showToast("Selecciona la razón antes de guardar", true);
+    // Resaltar el select correcto según el escenario
+    const selId = callState.contesto === true
+      ? "razonNuevaLlamada"
+      : "razonNuevaLlamadaNo";
+    const sel = document.getElementById(selId);
+    if (sel) {
+      sel.focus();
+      sel.classList.add("invalid-pulse");
+      setTimeout(() => sel.classList.remove("invalid-pulse"), 1500);
     }
-    if (callState.razonNuevaLlamada === "Otros") {
-      const otro = document.getElementById("razonNuevaLlamadaOtros").value.trim();
-      if (!otro) {
-        showToast("Escribe la razón en 'Otros'", true);
-        document.getElementById("razonNuevaLlamadaOtros").focus();
-        return;
-      }
+    return;
+  }
+  if (callState.razonNuevaLlamada === "Otros") {
+    const otrosId = callState.contesto === true
+      ? "razonNuevaLlamadaOtros"
+      : "razonNuevaLlamadaOtrosNo";
+    const otro = document.getElementById(otrosId);
+    if (otro && otro.value.trim() === "") {
+      showToast("Escribe la razón en 'Otros'", true);
+      otro.focus();
+      return;
     }
   }
 
