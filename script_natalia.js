@@ -341,20 +341,20 @@ const btnIniciar = document.getElementById("btnIniciar");
 const contactoHint = document.getElementById("contactoHint");
 
 inputContacto.addEventListener("input", (e) => {
-  // Solo permite dígitos
-  const filtered = e.target.value.replace(/\D/g, "").slice(0, 9);
+  // Solo permite 11 dígitos
+  const filtered = e.target.value.replace(/\D/g, "").slice(0, 11);
   if (filtered !== e.target.value) {
     e.target.value = filtered;
   }
 
   const len = filtered.length;
   if (len === 0) {
-    contactoHint.textContent = "Solo 9 dígitos numéricos";
+    contactoHint.textContent = "Solo 11 dígitos numéricos";
     contactoHint.classList.remove("error");
     inputContacto.classList.remove("invalid");
     btnIniciar.disabled = true;
-  } else if (len < 9) {
-    contactoHint.textContent = `Faltan ${9 - len} dígito${9 - len === 1 ? "" : "s"}`;
+  } else if (len < 11) {
+    contactoHint.textContent = `Faltan ${11 - len} dígito${11 - len === 1 ? "" : "s"}`;
     contactoHint.classList.add("error");
     inputContacto.classList.add("invalid");
     btnIniciar.disabled = true;
@@ -378,8 +378,8 @@ inputContacto.addEventListener("keydown", (e) => {
    ========================================================= */
 btnIniciar.addEventListener("click", () => {
   const contacto = inputContacto.value.trim();
-  if (!/^\d{9}$/.test(contacto)) {
-    showToast("Ingresa 9 dígitos válidos", true);
+  if (!/^\d{11}$/.test(contacto)) {
+    showToast("Ingresa 11 dígitos válidos", true);
     return;
   }
 
