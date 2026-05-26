@@ -271,7 +271,7 @@ function resetCallState() {
 
   document.getElementById("inputContacto").value = "";
   document.getElementById("inputContacto").classList.remove("invalid");
-  document.getElementById("contactoHint").textContent = "Solo 9 dígitos numéricos";
+  document.getElementById("contactoHint").textContent = "Solo 11 dígitos numéricos";
   document.getElementById("contactoHint").classList.remove("error");
   document.getElementById("btnIniciar").disabled = true;
 
@@ -1283,7 +1283,7 @@ function llamarAhoraDesdeRecordatorio(rowId) {
   document.querySelector('.tab[data-tab="register"]').click();
 
   const inp = document.getElementById("inputContacto");
-  inp.value = String(r.item.contacto).replace(/\D/g, "").slice(0, 9);
+  inp.value = String(r.item.contacto).replace(/\D/g, "").slice(0, 11);
   inp.dispatchEvent(new Event("input", { bubbles: true }));
   inp.focus();
 
