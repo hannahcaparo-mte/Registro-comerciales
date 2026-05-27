@@ -353,8 +353,8 @@ inputContacto.addEventListener("input", (e) => {
     contactoHint.classList.remove("error");
     inputContacto.classList.remove("invalid");
     btnIniciar.disabled = true;
-  } else if (len < 11) {
-    contactoHint.textContent = `Faltan ${11 - len} dígito${11 - len === 1 ? "" : "s"}`;
+  } else if (len < 9) {
+    contactoHint.textContent = `Faltan ${9 - len} dígito${9 - len === 1 ? "" : "s"}`;
     contactoHint.classList.add("error");
     inputContacto.classList.add("invalid");
     btnIniciar.disabled = true;

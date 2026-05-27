@@ -2,7 +2,7 @@
    REGISTRO COMERCIAL · NATALIA
    ========================================================= */
 
-const COMERCIAL = "Natalia";
+const COMERCIAL = "Nirvana";
 
 /* =========================================================
    🔌 CONFIGURACIÓN GOOGLE SHEETS
@@ -10,7 +10,7 @@ const COMERCIAL = "Natalia";
 
 const SHEETS_WEBAPP_URL = "https://script.google.com/a/macros/mte.com.pe/s/AKfycbx-fk7WOoUC3T2DXAkNmSMllVvP72HFsYmcVIokVijrSm7wZA6J6Z4Yig8nEHl8vnXNCw/exec";
 
-const STORAGE_KEY = "registroNatalia_v3";
+const STORAGE_KEY = "registroNirvana_v3";
 
 const METAS_POR_DIA = {
   0: 0,   // Domingo
