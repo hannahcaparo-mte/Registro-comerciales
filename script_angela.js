@@ -164,8 +164,29 @@ tabs.forEach((tab) => {
     tabs.forEach((t) => t.classList.toggle("active", t === tab));
     panels.forEach((p) => p.classList.toggle("active", p.id === `panel-${target}`));
 
-    if (target === "pending") cargarConteosKommo();
-    if (target === "funnel") cargarReporteEmbudos();
+    // Al cambiar de pestaña, usar lo que ya está cargado (no recargar).
+    // Solo cargar de Kommo si NO hay datos previos.
+    if (target === "pending") {
+      // Si ya estábamos viendo un programa, mostrar esa lista de leads.
+      // Si no, mostrar la vista A (chips de programas).
+      if (programaActual && cacheLeads[programaActual]) {
+        mostrarLeadsPrograma(programaActual);   // usa caché
+      } else if (cacheConteos.data) {
+        renderProgramChips(cacheConteos.data);   // usa caché
+        document.getElementById("pendingProgramsView").classList.remove("hidden");
+        document.getElementById("pendingLeadsView").classList.add("hidden");
+      } else {
+        cargarConteosKommo();   // primera vez, recargar
+      }
+    }
+    if (target === "funnel") {
+      // Mostrar caché si existe; si no, cargar
+      if (cacheFunnel.data) {
+        renderFunnel(cacheFunnel.data);
+      } else {
+        cargarReporteEmbudos();
+      }
+    }
     if (target === "history") renderHistorial();
   });
 });
@@ -653,6 +674,7 @@ function renderHistorial() {
    ============================================================ */
 const cacheConteos = { ts: 0, data: null };
 const cacheLeads = {};   // { "TCI": { ts, leads }, ... }
+const cacheFunnel = { ts: 0, data: null };
 const CACHE_MS = 60_000; // 1 minuto
 
 function cargarConteosKommo(forzar = false) {
@@ -722,7 +744,13 @@ function renderProgramChips(data) {
 }
 
 document.getElementById("btnRecargarPending").addEventListener("click", () => {
-  cargarConteosKommo(true);   // forzar refresh
+  // Si está en vista B (lista de leads de un programa), recargar esa lista
+  const enVistaLeads = !document.getElementById("pendingLeadsView").classList.contains("hidden");
+  if (enVistaLeads && programaActual) {
+    mostrarLeadsPrograma(programaActual, true);  // forzar refresh
+  } else {
+    cargarConteosKommo(true);   // forzar refresh
+  }
 });
 
 /* ============================================================
@@ -738,11 +766,16 @@ function mostrarLeadsPrograma(programa, forzar = false) {
   document.getElementById("pendingLeadsView").classList.remove("hidden");
   document.getElementById("leadsProgName").textContent = programa;
 
-  // Caché por programa
+  // Caché por programa: si existe, usarlo (sin importar que haya
+  // expirado). Solo se recarga si el usuario pide "↻ Actualizar".
   const ent = cacheLeads[programa];
-  if (!forzar && ent && (Date.now() - ent.ts) < CACHE_MS) {
+  if (!forzar && ent) {
     leadsActuales = ent.leads;
     renderLeads();
+    // Si el caché está viejo (>1 min), recargar en segundo plano
+    if ((Date.now() - ent.ts) > CACHE_MS) {
+      _recargarLeadsEnSegundoPlano(programa);
+    }
     return;
   }
 
@@ -764,6 +797,23 @@ function mostrarLeadsPrograma(programa, forzar = false) {
     leadsActuales = data.items || [];
     cacheLeads[programa] = { ts: Date.now(), leads: leadsActuales };
     renderLeads();
+  });
+}
+
+// Recarga silenciosa en segundo plano (sin spinner ni interrupciones)
+function _recargarLeadsEnSegundoPlano(programa) {
+  jsonpGet({
+    accion: "kommoLeads",
+    comercial: COMERCIAL.toLowerCase(),
+    programa: programa,
+  }, (data) => {
+    if (!data || !data.ok) return;
+    cacheLeads[programa] = { ts: Date.now(), leads: data.items || [] };
+    // Solo refrescar la vista si el usuario sigue mirando este programa
+    if (programaActual === programa) {
+      leadsActuales = data.items || [];
+      renderLeads();
+    }
   });
 }
 
@@ -860,11 +910,16 @@ function llamarLeadDesdeKommo(d) {
 /* ============================================================
    REPORTE DE EMBUDOS
    ============================================================ */
-function cargarReporteEmbudos() {
+function cargarReporteEmbudos(forzar = false) {
   const body = document.getElementById("funnelBody");
-  const foot = document.getElementById("funnelFoot");
   const empty = document.getElementById("funnelEmpty");
   const loading = document.getElementById("funnelLoading");
+
+  // Usar caché si existe y está fresco (y no se forzó refresh)
+  if (!forzar && cacheFunnel.data && (Date.now() - cacheFunnel.ts) < CACHE_MS) {
+    renderFunnel(cacheFunnel.data);
+    return;
+  }
 
   loading.classList.remove("hidden");
   empty.classList.add("hidden");
@@ -879,7 +934,9 @@ function cargarReporteEmbudos() {
       showToast("No se pudo cargar: " + ((data && data.error) || "error"), true);
       return;
     }
-    renderFunnel(data.items || []);
+    cacheFunnel.ts = Date.now();
+    cacheFunnel.data = data.items || [];
+    renderFunnel(cacheFunnel.data);
   });
 }
 
@@ -938,7 +995,9 @@ function renderFunnel(items) {
   `;
 }
 
-document.getElementById("btnRecargarFunnel").addEventListener("click", cargarReporteEmbudos);
+document.getElementById("btnRecargarFunnel").addEventListener("click", () => {
+  cargarReporteEmbudos(true);
+});
 
 /* ============================================================
    JSONP HELPER (esquiva CORS para llamar al Apps Script)
