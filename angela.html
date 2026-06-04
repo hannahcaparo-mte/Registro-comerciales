@@ -24,8 +24,6 @@
       </div>
 
       <div class="header-right">
-
-        <!-- ==META== -->
         <div class="goal-tracker" id="goalTracker">
           <div class="goal-info">
             <span class="goal-label">Meta del día</span>
@@ -55,19 +53,23 @@
     </div>
 
     <nav class="tabs" role="tablist">
-      <button class="tab active" data-tab="register" role="tab">
+      <button class="tab active" data-tab="pending" role="tab">
         <span class="tab-num">01</span>
-        <span class="tab-text">Registrar nueva llamada</span>
+        <span class="tab-text">Llamadas pendientes (hoy)</span>
+        <span class="tab-badge" id="pendingCount">—</span>
       </button>
       <button class="tab" data-tab="history" role="tab">
         <span class="tab-num">02</span>
         <span class="tab-text">Historial de llamadas (hoy)</span>
         <span class="tab-badge" id="historyCount">0</span>
       </button>
-      <button class="tab" data-tab="reminders" role="tab">
+      <button class="tab" data-tab="register" role="tab">
         <span class="tab-num">03</span>
-        <span class="tab-text">Llamadas programadas (hoy)</span>
-        <span class="tab-badge" id="remindersCount">0</span>
+        <span class="tab-text">Registrar nueva llamada</span>
+      </button>
+      <button class="tab" data-tab="funnel" role="tab">
+        <span class="tab-num">04</span>
+        <span class="tab-text">Reporte de embudos</span>
       </button>
     </nav>
   </header>
@@ -75,32 +77,159 @@
   <!-- ====== CONTENIDO ====== -->
   <main class="app-main">
 
-  
-    <!-- PESTAÑA 1 -->
-  
-    <section class="tab-panel active" id="panel-register">
+    <!-- ================================================ -->
+    <!-- PESTAÑA 1: LLAMADAS PENDIENTES                     -->
+    <!-- ================================================ -->
+    <section class="tab-panel active" id="panel-pending">
+      <div class="panel-head">
+        <h2 class="panel-title">Llamadas pendientes</h2>
+        <p class="panel-sub" id="pendingSub">Selecciona un programa para ver los leads por llamar.</p>
+        <button class="btn btn-ghost btn-sm" id="btnRecargarPending" type="button">↻ Actualizar</button>
+      </div>
 
-      <!-- ===== INICIO ===== -->
-      <div class="stage" id="stage-start">
-        <div class="stage-header compact">
-         
-          <h2 class="stage-title">Nueva llamada</h2>
-          <p class="stage-sub">Ingresar el número de contacto.</p>
+      <!-- Vista A: chips de programas con conteo -->
+      <div class="card" id="pendingProgramsView">
+        <h3 class="card-title">¿Qué programa vas a avanzar?</h3>
+        <p class="card-sub">Toca un programa para ver sus leads.</p>
+        <div class="program-chips" id="programChips">
+          <div class="empty-state-inline">
+            <span class="spinner"></span>
+            <span>Cargando conteos…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista B: lista de leads del programa elegido -->
+      <div class="card hidden" id="pendingLeadsView">
+        <div class="leads-header">
+          <button class="btn btn-ghost" id="btnVolverPrograms" type="button">← Volver</button>
+          <h3 class="leads-title">
+            Leads de <span id="leadsProgName">—</span>
+            <span class="leads-counter" id="leadsCounter">(0)</span>
+          </h3>
         </div>
 
+        <!-- Filtros por fase del embudo -->
+        <div class="filter-row">
+          <label class="filter-chip">
+            <input type="checkbox" class="phase-filter" value="0" checked />
+            <span>Info enviada (1ra llamada)</span>
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" class="phase-filter" value="1" checked />
+            <span>No contesta 1 (2da llamada)</span>
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" class="phase-filter" value="2" checked />
+            <span>No contesta 2 (3ra llamada)</span>
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" class="phase-filter" value="3" checked />
+            <span>No contesta 3 (última)</span>
+          </label>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Nombre de referencia</th>
+                <th>Programa</th>
+                <th>Situación</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="pendingLeadsBody"></tbody>
+          </table>
+        </div>
+
+        <div class="empty-state hidden" id="pendingLeadsEmpty">
+          <div class="empty-icon">📞</div>
+          <p>No hay leads en esta selección.</p>
+        </div>
+
+        <div class="empty-state hidden" id="pendingLoading">
+          <span class="spinner"></span>
+          <p>Cargando leads de Kommo…</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================ -->
+    <!-- PESTAÑA 2: HISTORIAL                              -->
+    <!-- ================================================ -->
+    <section class="tab-panel" id="panel-history">
+      <div class="panel-head">
+        <h2 class="panel-title">Historial de llamadas — hoy</h2>
+        <p class="panel-sub" id="historySub">Todas las llamadas registradas en el día.</p>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Hora inicio</th>
+                <th>Número</th>
+                <th>Nombre</th>
+                <th>Contestó</th>
+                <th>Duración</th>
+                <th>Interés</th>
+                <th>Calidad</th>
+                <th>Programa</th>
+                <th>Situación</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+
+        <div class="empty-state hidden" id="historyEmpty">
+          <div class="empty-icon">🕓</div>
+          <p>Aún no has registrado llamadas hoy.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================ -->
+    <!-- PESTAÑA 3: REGISTRAR NUEVA LLAMADA                -->
+    <!-- ================================================ -->
+    <section class="tab-panel" id="panel-register">
+      <div class="panel-head">
+        <h2 class="panel-title">Registrar nueva llamada</h2>
+        <p class="panel-sub" id="registerSub">Ingresa los datos del lead y la llamada.</p>
+      </div>
+
+      <!-- ETAPA START -->
+      <div class="stage" id="stage-start">
         <div class="card start-card">
+          <div class="lead-info-banner hidden" id="leadInfoBanner">
+            <div class="lead-info-row">
+              <span class="lead-info-label">Lead Kommo:</span>
+              <strong class="lead-info-value" id="lbName">—</strong>
+            </div>
+            <div class="lead-info-row">
+              <span class="lead-info-label">Programa:</span>
+              <span class="lead-info-value" id="lbPrograma">—</span>
+              <span class="lead-info-sep">·</span>
+              <span class="lead-info-label">Situación:</span>
+              <span class="lead-info-value" id="lbSituacion">—</span>
+            </div>
+            <div class="lead-info-row">
+              <span class="lead-info-label">Código:</span>
+              <span class="lead-info-value mono" id="lbCodigo">—</span>
+            </div>
+            <button class="btn btn-ghost btn-sm" type="button" id="btnLimpiarLead">✕ Quitar lead</button>
+          </div>
+
           <label class="field">
             <span class="field-label">Contacto</span>
-            <input
-              type="tel"
-              id="inputContacto"
-              placeholder="Ej. 51987654321"
-              autocomplete="off"
-              inputmode="numeric"
-              maxlength="11"
-              pattern="[0-9]{11}"
-            />
-            <span class="field-hint" id="contactoHint">Al momento de empezar a llamar presionar "Iniciar llamada"</span>
+            <input type="tel" id="inputContacto"
+                   placeholder="Ej. 51987654321"
+                   autocomplete="off" inputmode="numeric"
+                   maxlength="11" pattern="[0-9]{11}" />
+            <span class="field-hint" id="contactoHint">Solo 11 dígitos numéricos</span>
           </label>
 
           <label class="field">
@@ -119,196 +248,138 @@
         </div>
       </div>
 
-      <!-- ===== ETAPA "PRÓXIMAMENTE" — para Cobranza / Demo ===== -->
+      <!-- ETAPA SOON (próximamente cobranza/demo) -->
       <div class="stage hidden" id="stage-soon">
-        <div class="stage-header compact">
-          <span class="stage-tag">En construcción</span>
-          <h2 class="stage-title" id="soonTitle">Próximamente</h2>
-          <p class="stage-sub" id="soonSub">
-            El flujo para esta opción aún no está disponible.
-          </p>
-        </div>
-
         <div class="card start-card soon-card">
           <div class="soon-icon">🚧</div>
-          <p class="soon-text">
-            Este tipo de llamada se gestionará en otra herramienta más adelante.
-          </p>
+          <h3 id="soonTitle">Próximamente</h3>
+          <p class="soon-text">Este tipo de llamada se gestionará más adelante.</p>
           <button class="btn btn-primary btn-lg btn-block" id="btnVolverInicio" type="button">
             ← Volver al inicio
           </button>
         </div>
       </div>
 
-      <!-- ===== ETAPA 2 ===== -->
-
+      <!-- ETAPA CALLING -->
       <div class="stage hidden" id="stage-calling">
-        <div class="stage-header compact">
-          <span class="stage-tag pulse" id="stageTag">Esperando respuesta ...</span>
-          <h2 class="stage-title">Llamada activa</h2>
-          <p class="stage-sub" id="callingSub">Esperando respuesta…</p>
-        </div>
+        <div class="card calling-card">
 
-        <div class="split-layout">
-          <!-- Panel de control de la llamada -->
-          <div class="card calling-card">
-            <div class="calling-info">
-              <div class="info-row">
-                <span class="info-label">Contacto</span>
-                <span class="info-value mono" id="dispContacto">—</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Inicio de la interacción</span>
-                <span class="info-value mono" id="dispHoraInicio">—</span>
-              </div>
+          <!-- Header de la llamada -->
+          <div class="call-header">
+            <div class="call-info">
+              <span class="call-info-label">Contacto</span>
+              <strong class="call-info-value mono" id="dispContacto">—</strong>
             </div>
-
-            <div class="timer-wrap" id="timerWrap1">
-              <span class="timer-label">Duración</span>
-              <div class="timer mono" id="timer">00:00</div>
-              <div class="timer-status" id="timerStatus">Marcando…</div>
+            <div class="call-info">
+              <span class="call-info-label">Inicio</span>
+              <strong class="call-info-value mono" id="dispHoraInicio">—</strong>
             </div>
-
-            <!-- Botones iniciales -->
-            <div class="calling-actions" id="callingActions1">
-              <button class="btn btn-success" id="btnRespondio">
-                <span class="btn-icon">✓</span>
-                Respondió
-              </button>
-              <button class="btn btn-ghost" id="btnNoContesto">
-                Interacción perdida
-              </button>
-            </div>
-
-            <!-- Botón "Finalizó la interacción" -->
-            <div class="calling-actions hidden" id="callingActions2">
-              <button class="btn btn-danger btn-block" id="btnTerminar">
-                Finalizó la conversación
-              </button>
-            </div>
-
-            <!-- Bloque de cierre cuando SÍ contestó -->
-            <div class="closing-block hidden" id="closingBlockYes">
-              <div class="section-divider"><span>Motivo de finalización</span></div>
-              <div class="chip-group" id="motivoYesGroup">
-                <button type="button" class="chip" data-value="Colgó">Colgó</button>
-                <button type="button" class="chip" data-value="Interacción finalizada">Interacción finalizada</button>
-              </div>
-              <button class="btn btn-primary btn-block mt-md" id="btnGuardarYes">
-                <span class="btn-icon">+</span>
-                Agregar nueva información
-              </button>
-              <button class="btn btn-ghost btn-block mt-sm" id="btnCancelarYes">Cancelar</button>
-            </div>
-
-            <!-- Bloque de cierre cuando NO contestó -->
-            <div class="closing-block hidden" id="closingBlockNo">
-              <div class="section-divider"><span>Motivo de finalización</span></div>
-              <div class="chip-group" id="motivoNoGroup">
-                <button type="button" class="chip" data-value="Colgó">Colgó</button>
-                <button type="button" class="chip" data-value="No contestó">No contestó</button>
-              </div>
+            <div class="call-info">
+              <span class="call-info-label">Duración</span>
+              <strong class="call-info-value mono" id="callTimer">00:00</strong>
             </div>
           </div>
 
-          <!-- Formulario en vivo -->
-          <div class="card form-card live-form" id="liveForm">
-            <div class="live-form-header">
-              <h3 class="live-form-title">Información del contacto</h3>
-              <p class="live-form-sub">Llena estos campos mientras la conversación está activa.</p>
-            </div>
+          <!-- Acciones iniciales: contestó / no contestó -->
+          <div class="call-actions" id="callingActions1">
+            <button class="btn btn-success btn-lg" id="btnRespondio" type="button">
+              ✓ Sí contestó
+            </button>
+            <button class="btn btn-danger btn-lg" id="btnNoRespondio" type="button">
+              ✕ No contestó
+            </button>
+          </div>
 
-            <!-- FILA 1: Interés + Calidad de lead -->
-            <div class="form-row">
-              <div class="field">
-                <span class="field-label">¿Muestra interés en el programa?</span>
-                <div class="chip-group" id="interesGroup">
-                  <button type="button" class="chip chip-yes" data-value="Sí">Sí</button>
-                  <button type="button" class="chip chip-no" data-value="No">No</button>
-                </div>
+          <!-- Acciones cuando ya respondió -->
+          <div class="call-actions hidden" id="callingActions2">
+            <button class="btn btn-primary btn-lg" id="btnFinLlamada" type="button">
+              ⏺ Finalizar llamada
+            </button>
+          </div>
+
+          <!-- Hora de respuesta -->
+          <div class="hidden" id="respondioInfo">
+            <p class="muted">Respondió a las <span class="mono" id="dispHoraResp">—</span>.</p>
+          </div>
+
+          <!-- ============================================ -->
+          <!-- FORMULARIO: lado SÍ CONTESTÓ                  -->
+          <!-- ============================================ -->
+          <div class="form-card hidden" id="liveForm">
+
+            <div class="section-divider"><span>Resultado de la llamada</span></div>
+
+            <label class="field">
+              <span class="field-label">¿Contestó? <small class="muted">(habló más de 1 minuto)</small></span>
+              <div class="chip-group" id="contestoGroup" data-name="contesto">
+                <button type="button" class="chip" data-value="Sí">Sí</button>
+                <button type="button" class="chip" data-value="No">No</button>
               </div>
-              <div class="field">
-                <span class="field-label">Calidad de lead</span>
-                <div class="chip-group temp-group" id="calidadGroup">
-                  <button type="button" class="chip chip-cold" data-value="Frío">❄ Frío</button>
-                  <button type="button" class="chip chip-warm" data-value="Tibio">◐ Tibio</button>
-                  <button type="button" class="chip chip-hot" data-value="Caliente">🔥 Caliente</button>
-                </div>
+            </label>
+
+            <label class="field">
+              <span class="field-label">Calidad del lead</span>
+              <div class="chip-group" id="calidadGroup" data-name="calidad">
+                <button type="button" class="chip" data-value="Caliente">🔥 Caliente</button>
+                <button type="button" class="chip" data-value="Tibio">🌡 Tibio</button>
+                <button type="button" class="chip" data-value="Frío">❄ Frío</button>
               </div>
-            </div>
+            </label>
 
-            <div class="section-divider"><span>Segmentación de lead</span></div>
-
-            <div class="form-row">
-              <label class="field">
-                <span class="field-label">Programa de interés</span>
-                <select id="programa">
-                  <option value="">Seleccionar…</option>
-                  <option>GAC I</option>
-                  <option>GAC II</option>
-                  <option>GTD</option>
-                  <option>ACE</option>
-                  <option>CGI</option>
-                  <option>GEIMP</option>
-                  <option>CIRCUITO</option>
-                  <option>LAB SUPPLY</option>
-                  <option>DEMO COMEX</option>
-                  <option>OCI</option>
-                  <option>GOL</option>
-                  <option>LEAN LOGISTIC</option>
-                  <option>TCI</option>
-                  <option>PGA</option>
-                  <option>COMPRAS</option>
-                  <option>SDA</option>
-                </select>
-              </label>
-
-              <label class="field">
-                <span class="field-label">Carrera</span>
-                <select id="carrera">
-                  <option value="">Seleccionar…</option>
-                  <option>Administración</option>
-                  <option>Negocios Internacionales</option>
-                  <option>Ingeniería Industrial</option>
-                  <option>Administración Logística</option>
-                  <option>Administración Industrial</option>
-                  <option>Otra carrera afín</option>
-                  <option>No tiene carrera</option>
-                  <option>No segmento carrera</option>
-                </select>
-              </label>
-            </div>
-
-            <div class="form-row">
-              <div class="field">
-                <span class="field-label">¿Es de Provincia?</span>
-                <div class="chip-group" id="provinciaGroup">
-                  <button type="button" class="chip chip-yes" data-value="Sí">Sí</button>
-                  <button type="button" class="chip chip-no" data-value="No">No</button>
-                </div>
+            <label class="field">
+              <span class="field-label">¿Mostró interés?</span>
+              <div class="chip-group" id="interesGroup" data-name="interes">
+                <button type="button" class="chip" data-value="Sí">Sí</button>
+                <button type="button" class="chip" data-value="No">No</button>
               </div>
-              <div class="field">
-                <span class="field-label">¿Es del Segmento de edad? </span>
-                <div class="chip-group" id="edadGroup">
-                  <button type="button" class="chip chip-yes" data-value="Sí">Sí</button>
-                  <button type="button" class="chip chip-no" data-value="No">No</button>
-                </div>
-              </div>
-            </div>
+            </label>
 
-            <div class="section-divider"><span>Seguimiento posterior</span></div>
+            <!-- Motivo no interés (solo si interés=No) -->
+            <label class="field hidden" id="motivoNoInteresWrap">
+              <span class="field-label">Motivo de no interés</span>
+              <select id="motivoNoInteres">
+                <option value="">Seleccionar…</option>
+                <option value="Precio">Precio</option>
+                <option value="Horario">Horario</option>
+                <option value="Modalidad">Modalidad</option>
+                <option value="No es el momento">No es el momento</option>
+                <option value="Ya tomó el curso">Ya tomó el curso</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </label>
+            <label class="field hidden" id="motivoOtrosWrap">
+              <span class="field-label">Especificar motivo</span>
+              <input type="text" id="motivoNoInteresOtros" placeholder="Escribe el motivo…" />
+            </label>
 
-            <div class="form-row">
-              <label class="field field-toggle">
-                <span class="field-label">¿Llamar luego? -> Generación de recordatorio</span>
-                <label class="switch">
-                  <input type="checkbox" id="llamarLuego" />
-                  <span class="slider"></span>
-                </label>
-              </label>
-            </div>
+            <label class="field">
+              <span class="field-label">Carrera</span>
+              <input type="text" id="carrera" placeholder="Ej. Ing. Industrial" />
+            </label>
 
-            <div class="datetime-row" id="proxContactoWrap">
+            <label class="field">
+              <span class="field-label">Provincia</span>
+              <input type="text" id="provincia" placeholder="Ej. Lima" />
+            </label>
+
+            <label class="field">
+              <span class="field-label">Edad</span>
+              <input type="number" id="edad" min="14" max="100" placeholder="Ej. 22" />
+            </label>
+
+            <label class="field check-field">
+              <input type="checkbox" id="demoCheck" />
+              <span>¿Se le ofreció una <strong>demo</strong>?</span>
+            </label>
+
+            <div class="section-divider"><span>Seguimiento</span></div>
+
+            <label class="field toggle-field">
+              <span>¿Llamar luego?</span>
+              <input type="checkbox" id="llamarLuegoYes" />
+            </label>
+
+            <div class="datetime-row hidden" id="proxContactoYesWrap">
               <label class="field">
                 <span class="field-label">Fecha tentativa</span>
                 <input type="date" id="proxContactoYes" />
@@ -337,54 +408,18 @@
               </div>
             </div>
 
-            <label class="field" id="razonLlamadaWrap">
-              <span class="field-label" id="razonLlamadaLabel">
-                Razón
-                <span class="req-mark" id="razonReqMark">*</span>
+            <label class="field" id="razonLlamadaWrapYes">
+              <span class="field-label" id="razonLlamadaLabelYes">
+                Razón <span class="req-mark" id="razonReqMarkYes">*</span>
               </span>
-              <select id="razonNuevaLlamada">
+              <select id="razonNuevaLlamadaYes">
                 <option value="">Seleccionar…</option>
               </select>
             </label>
 
-            <label class="field hidden" id="razonOtrosWrap">
+            <label class="field hidden" id="razonOtrosWrapYes">
               <span class="field-label">Especificar razón</span>
-              <input type="text" id="razonNuevaLlamadaOtros" placeholder="Escribe la razón…" />
-            </label>
-
-            <label class="field" id="nombreRefWrap">
-              <span class="field-label">Nombre de referencia</span>
-              <input type="text" id="nombreRef" placeholder="Ej. Juan Pérez, Juanita Perez ..." />
-            </label>
-
-            <div class="section-divider"><span>Si no muestra interés </span></div>
-
-            <label class="field">
-              <span class="field-label">Motivo</span>
-              <select id="motivoNoInteres">
-                <option value="">Seleccionar…</option>
-                <option value="Por la ubicación (es de provincia)">Ubicación (provincia)</option>
-                <option value="Por el costo del programa (está muy caro)">Costo del programa (muy caro)</option>
-                <option value="Por la falta de tiempo (los horarios no le cuadran)">Falta de tiempo (horarios no cuadran)</option>
-                <option value="Porque consiguió trabajo">Consiguió trabajo</option>
-                <option value="Otros">Otros</option>
-              </select>
-            </label>
-
-            <label class="field hidden" id="motivoOtrosWrap">
-              <span class="field-label">Especificar otro motivo</span>
-              <input type="text" id="motivoNoInteresOtros" placeholder="Escribe el motivo…" />
-            </label>
-
-            <div class="section-divider"><span>Resultado de la llamada</span></div>
-
-            <label class="field">
-              <span class="field-label">Venta cerrada</span>
-              <div class="chip-group" id="ventaCerradaGroup" data-name="ventaCerrada">
-                <button type="button" class="chip" data-value="Sí">Sí</button>
-                <button type="button" class="chip" data-value="No">No</button>
-                <button type="button" class="chip" data-value="Casi">Casi</button>
-              </div>
+              <input type="text" id="razonNuevaLlamadaOtrosYes" placeholder="Escribe la razón…" />
             </label>
 
             <div class="section-divider"><span>Observaciones</span></div>
@@ -393,31 +428,42 @@
               <span class="field-label">Observación</span>
               <textarea id="Nota" rows="3" placeholder="Notas adicionales de la llamada…"></textarea>
             </label>
+
+            <div class="actions-row">
+              <button class="btn btn-secondary" id="btnCancelarYes" type="button">Cancelar</button>
+              <button class="btn btn-primary btn-lg" id="btnGuardarYes" type="button">
+                💾 Guardar llamada
+              </button>
+            </div>
           </div>
 
-          <!-- Columna derecha alternativa: cuando NO contestó -->
+          <!-- ============================================ -->
+          <!-- FORMULARIO: lado NO CONTESTÓ                  -->
+          <!-- ============================================ -->
+          <div class="form-card hidden" id="noAnswerPanel">
+            <div class="section-divider"><span>No contestó</span></div>
 
-          <div class="card form-card no-answer-panel hidden" id="noAnswerPanel">
-            <div class="live-form-header">
-              <h3 class="live-form-title">Seguimiento posterior</h3>
-              <p class="live-form-sub">Define cuándo volver a contactar.</p>
-            </div>
-
-            <label class="field field-toggle">
-              <span class="field-label">¿Volver a llamar? -> Generación de recordatorio</span>
-              <label class="switch">
-                <input type="checkbox" id="volverLlamar" checked />
-                <span class="slider"></span>
-              </label>
+            <label class="field">
+              <span class="field-label">Motivo</span>
+              <div class="chip-group" id="motivoNoGroup" data-name="motivoNo">
+                <button type="button" class="chip" data-value="Buzón">📦 Buzón de voz</button>
+                <button type="button" class="chip" data-value="No respondió">📵 No respondió</button>
+                <button type="button" class="chip" data-value="Cortó">⛔ Cortó</button>
+                <button type="button" class="chip" data-value="Otro">Otro</button>
+              </div>
             </label>
 
-            <div id="volverLlamarFields">
+            <label class="field toggle-field">
+              <span>¿Volver a llamar?</span>
+              <input type="checkbox" id="volverLlamarNo" checked />
+            </label>
+
+            <div class="datetime-row" id="proxContactoNoWrap">
               <label class="field">
-                <span class="field-label">Fecha próximo contacto</span>
+                <span class="field-label">Fecha tentativa</span>
                 <input type="date" id="proxContactoNo" />
               </label>
-
-              <label class="field">
+              <div class="field">
                 <span class="field-label">Hora tentativa</span>
                 <div class="time-picker">
                   <select id="proxHoraNoH" class="time-h">
@@ -438,13 +484,12 @@
                     <option selected>p.m.</option>
                   </select>
                 </div>
-              </label>
+              </div>
             </div>
 
             <label class="field" id="razonLlamadaWrapNo">
               <span class="field-label" id="razonLlamadaLabelNo">
-                Razón
-                <span class="req-mark" id="razonReqMarkNo">*</span>
+                Razón <span class="req-mark" id="razonReqMarkNo">*</span>
               </span>
               <select id="razonNuevaLlamadaNo">
                 <option value="">Seleccionar…</option>
@@ -456,99 +501,73 @@
               <input type="text" id="razonNuevaLlamadaOtrosNo" placeholder="Escribe la razón…" />
             </label>
 
-            <div class="no-answer-actions">
-              <button class="btn btn-primary btn-block" id="btnGuardarNo">
-                <span class="btn-icon">+</span>
-                Agregar nueva información
+            <div class="section-divider"><span>Observaciones</span></div>
+
+            <label class="field">
+              <span class="field-label">Observación</span>
+              <textarea id="NotaNo" rows="2" placeholder="Notas opcionales…"></textarea>
+            </label>
+
+            <div class="actions-row">
+              <button class="btn btn-secondary" id="btnCancelarNo" type="button">Cancelar</button>
+              <button class="btn btn-primary btn-lg" id="btnGuardarNo" type="button">
+                💾 Guardar
               </button>
-              <button class="btn btn-ghost btn-block mt-sm" id="btnCancelarNo">Cancelar</button>
             </div>
           </div>
-        </div>
-      </div>
 
-    </section>
-
-    <!-- =============================================== -->
-    <!-- PESTAÑA 2: HISTORIAL                             -->
-    <!-- =============================================== -->
-    <section class="tab-panel" id="panel-history">
-      <div class="stage-header">
-        <span class="stage-tag">Registros actualizados</span>
-        <h2 class="stage-title">Historial diario de llamadas</h2>
-        <p class="stage-sub" id="historySub">Aún no hay llamadas registradas.</p>
-      </div>
-
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Número</th>
-              <th>Inicio</th>
-              <th>Duración</th>
-	      <th>Fin</th>
-              <th>Contestó</th>
-              <th>Interés</th>
-              <th>Calidad</th>
-              <th>Seguimiento posterior</th>
-              <th>Nota</th>
-            </tr>
-          </thead>
-          <tbody id="historyBody"></tbody>
-
-        </table>
-
-        <div class="empty-state hidden" id="emptyState">
-          <div class="empty-icon">⌗</div>
-          <p>Sin registros todavía</p>
-          <span>Las llamadas diarias aparecerán registradas aquí.</span>
         </div>
       </div>
     </section>
 
-    <!-- =============================================== -->
-    <!-- PESTAÑA 3: LLAMADAS PROGRAMADAS PARA HOY         -->
-    <!-- =============================================== -->
-    <section class="tab-panel" id="panel-reminders">
-      <div class="stage-header">
-        <span class="stage-tag">Recordatorios del día</span>
-        <h2 class="stage-title">Llamadas programadas para hoy</h2>
-        <p class="stage-sub" id="remindersSub">Cargando…</p>
+    <!-- ================================================ -->
+    <!-- PESTAÑA 4: REPORTE DE EMBUDOS                     -->
+    <!-- ================================================ -->
+    <section class="tab-panel" id="panel-funnel">
+      <div class="panel-head">
+        <h2 class="panel-title">Reporte de embudos</h2>
+        <p class="panel-sub">Distribución de tus leads por fase del embudo (desde Kommo).</p>
+        <button class="btn btn-ghost btn-sm" id="btnRecargarFunnel" type="button">↻ Actualizar</button>
       </div>
 
-      <div style="margin-bottom:14px;">
-        <button class="btn btn-secondary" id="btnRecargarProgramadas" type="button">
-          ↻ Actualizar lista
-        </button>
-      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Programa</th>
+                <th>Información enviada</th>
+                <th>No responde 1</th>
+                <th>No responde 2</th>
+                <th>No responde 3</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="funnelBody"></tbody>
+            <tfoot>
+              <tr id="funnelFoot">
+                <th>Total</th>
+                <th>—</th><th>—</th><th>—</th><th>—</th><th>—</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
 
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Número</th>
-              <th>Nombre de referencia</th>
-              <th>Hora tentativa</th>
-              <th>Razón</th>
-              <th>Situación</th>
-              <th>Estado</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-          <tbody id="remindersBody"></tbody>
-        </table>
+        <div class="empty-state hidden" id="funnelEmpty">
+          <div class="empty-icon">📊</div>
+          <p>Sin datos para mostrar.</p>
+        </div>
 
-        <div class="empty-state hidden" id="remindersEmpty">
-          <div class="empty-icon">☎</div>
-          <p>No hay llamadas programadas para hoy</p>
-          <span>Las llamadas programadas para hoy aparecerán aquí.</span>
+        <div class="empty-state hidden" id="funnelLoading">
+          <span class="spinner"></span>
+          <p>Cargando reporte…</p>
         </div>
       </div>
     </section>
 
   </main>
 
-  <!-- Toast -->
+  <!-- ====== TOAST ====== -->
   <div class="toast" id="toast"></div>
 
   <script src="script_angela.js"></script>

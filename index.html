@@ -11,10 +11,8 @@
   <style>
     .home-wrap {
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       padding: 24px;
       background: linear-gradient(135deg, #F4F6FB 0%, #E8EDF5 100%);
     }
@@ -23,55 +21,32 @@
       border-radius: 20px;
       padding: 40px 48px;
       box-shadow: 0 12px 40px rgba(20, 30, 70, 0.08);
-      max-width: 720px;
-      width: 100%;
+      max-width: 720px; width: 100%;
       text-align: center;
     }
-    .home-logo {
-      max-width: 120px;
-      height: auto;
-      margin: 0 auto 16px;
-      display: block;
-    }
+    .home-logo { max-width: 120px; margin: 0 auto 16px; display: block; }
     .home-title {
       font-family: 'Fraunces', serif;
-      font-size: 32px;
-      font-weight: 500;
-      color: #1A2B4C;
-      margin: 8px 0 8px;
+      font-size: 32px; font-weight: 500;
+      color: #1A2B4C; margin: 8px 0;
     }
-    .home-sub {
-      color: #6B7383;
-      font-size: 15px;
-      margin: 0 0 32px;
-    }
+    .home-sub { color: #6B7383; font-size: 15px; margin-bottom: 32px; }
     .commercial-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 16px;
-      margin-top: 8px;
     }
     @media (min-width: 720px) {
-      .commercial-grid {
-        grid-template-columns: repeat(4, 1fr);
-      }
+      .commercial-grid { grid-template-columns: repeat(4, 1fr); }
     }
     .commercial-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 24px 12px;
-      border: 2px solid #E5E9F2;
-      border-radius: 14px;
-      background: #FFFFFF;
-      color: #1A2B4C;
-      font-family: inherit;
-      font-size: 17px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; padding: 24px 12px;
+      border: 2px solid #E5E9F2; border-radius: 14px;
+      background: #FFFFFF; color: #1A2B4C;
+      font-family: inherit; font-size: 17px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
       transition: all .18s ease;
     }
     .commercial-btn:hover {
@@ -81,28 +56,16 @@
       box-shadow: 0 8px 20px rgba(26, 115, 232, 0.12);
     }
     .commercial-avatar {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #FFFFFF;
-      font-family: 'Fraunces', serif;
-      font-size: 24px;
-      font-weight: 500;
-      margin-bottom: 4px;
+      width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #FFFFFF; font-family: 'Fraunces', serif;
+      font-size: 24px; font-weight: 500;
     }
     .avatar-natalia  { background: #1B9E5A; }
     .avatar-angela   { background: #1A73E8; }
     .avatar-rosemary { background: #E37400; }
     .avatar-nirvana  { background: #8E44AD; }
-
-    .home-footer {
-      margin-top: 32px;
-      color: #9CA3AF;
-      font-size: 13px;
-    }
+    .home-footer { margin-top: 32px; color: #9CA3AF; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -111,26 +74,12 @@
       <img src="LOGO.png" alt="Logo" class="home-logo" onerror="this.style.display='none';" />
       <h1 class="home-title">Sistema de Registro Comercial</h1>
       <p class="home-sub">Selecciona tu perfil para empezar a registrar llamadas</p>
-
       <div class="commercial-grid">
-        <a href="natalia.html" class="commercial-btn">
-          <span class="commercial-avatar avatar-natalia">N</span>
-          Natalia
-        </a>
-        <a href="angela.html" class="commercial-btn">
-          <span class="commercial-avatar avatar-angela">A</span>
-          Angela
-        </a>
-        <a href="rosemary.html" class="commercial-btn">
-          <span class="commercial-avatar avatar-rosemary">R</span>
-          Rosemary
-        </a>
-        <a href="nirvana.html" class="commercial-btn">
-          <span class="commercial-avatar avatar-nirvana">N</span>
-          Nirvana
-        </a>
+        <a href="natalia.html" class="commercial-btn"><span class="commercial-avatar avatar-natalia">N</span>Natalia</a>
+        <a href="angela.html" class="commercial-btn"><span class="commercial-avatar avatar-angela">A</span>Angela</a>
+        <a href="rosemary.html" class="commercial-btn"><span class="commercial-avatar avatar-rosemary">R</span>Rosemary</a>
+        <a href="nirvana.html" class="commercial-btn"><span class="commercial-avatar avatar-nirvana">N</span>Nirvana</a>
       </div>
-
       <p class="home-footer">© MTE · Registro de llamadas comerciales</p>
     </div>
   </div>
