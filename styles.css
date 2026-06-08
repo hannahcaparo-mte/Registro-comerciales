@@ -554,3 +554,160 @@ body { min-height: 100vh; }
   .brand-logo { height: 36px; }
   .brand-name { font-size: 18px; }
 }
+
+/* ============================================================
+   REGISTER GRID (layout 2 columnas)
+   ============================================================ */
+.register-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 880px) {
+  .register-grid { grid-template-columns: 1fr; }
+}
+
+.register-left { position: sticky; top: 20px; }
+
+.start-card-compact { padding: 20px; }
+.start-card-compact .field { margin-bottom: 12px; }
+.start-card-compact .btn { margin-top: 8px; }
+
+.call-timer-box {
+  margin-top: 16px;
+  padding: 14px;
+  background: linear-gradient(135deg, #1A2B4C 0%, #0D1B3F 100%);
+  color: #fff;
+  border-radius: 10px;
+}
+.call-timer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.call-timer-row:last-child { margin-bottom: 0; }
+.call-timer-label { font-size: 12px; opacity: 0.7; text-transform: uppercase; letter-spacing: .04em; }
+.call-timer-value { font-size: 16px; }
+#callTimer { font-size: 22px; color: #FFD54F; }
+
+.call-actions-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* ============================================================
+   LEAD CARD (ficha del lead a la derecha)
+   ============================================================ */
+.empty-lead-card {
+  text-align: center;
+  padding: 48px 24px;
+}
+.empty-lead-card .empty-icon { font-size: 56px; margin-bottom: 8px; }
+.empty-lead-card h3 { font-family: 'Fraunces', serif; font-weight: 500; margin: 0 0 12px; }
+.empty-lead-card p { color: #6B7383; margin-bottom: 8px; }
+
+.loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: #6B7383;
+}
+
+.lead-card { padding: 24px; }
+.lead-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #E5E9F2;
+}
+.lead-card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+  color: #1A2B4C;
+}
+
+.lead-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 18px;
+  margin-bottom: 18px;
+}
+.lead-field { display: flex; flex-direction: column; gap: 2px; }
+.lead-field.full { grid-column: 1 / -1; }
+.lead-field-label {
+  font-size: 11px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.lead-field-value {
+  font-size: 14px;
+  color: #1A2B4C;
+  font-weight: 500;
+}
+
+.lead-notes {
+  border-top: 1px solid #E5E9F2;
+  padding-top: 14px;
+}
+.lead-notes-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4A5568;
+  margin: 0 0 10px;
+}
+.lead-note-item {
+  background: #FAFBFC;
+  border-left: 3px solid #1A73E8;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: 0 6px 6px 0;
+  font-size: 13px;
+}
+.lead-note-date {
+  font-size: 11px;
+  color: #9CA3AF;
+  margin-bottom: 4px;
+}
+.lead-note-text {
+  color: #4A5568;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* ============================================================
+   FORM CARD (con título)
+   ============================================================ */
+.form-card { padding: 24px; }
+.form-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0 0 16px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .form-grid-2 { grid-template-columns: 1fr; }
+}
+.form-grid-2 .field { margin-bottom: 0; }
+
+.soon-card {
+  text-align: center;
+  padding: 40px 24px;
+}

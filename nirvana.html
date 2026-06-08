@@ -201,111 +201,179 @@
         <p class="panel-sub" id="registerSub">Ingresa los datos del lead y la llamada.</p>
       </div>
 
-      <!-- ETAPA START -->
-      <div class="stage" id="stage-start">
-        <div class="card start-card">
-          <div class="lead-info-banner hidden" id="leadInfoBanner">
-            <div class="lead-info-row">
-              <span class="lead-info-label">Lead Kommo:</span>
-              <strong class="lead-info-value" id="lbName">—</strong>
+      <!-- Layout en 2 columnas: izquierda contacto, derecha ficha + form -->
+      <div class="register-grid">
+
+        <!-- ============================================ -->
+        <!-- COLUMNA IZQUIERDA: contacto + tipo + botón     -->
+        <!-- ============================================ -->
+        <div class="register-left">
+          <div class="card start-card-compact">
+            <label class="field">
+              <span class="field-label">Contacto</span>
+              <input type="tel" id="inputContacto"
+                     placeholder="Ej. 51987654321"
+                     autocomplete="off" inputmode="numeric"
+                     maxlength="11" pattern="[0-9]{11}" />
+              <span class="field-hint" id="contactoHint">Solo 11 dígitos numéricos</span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">Tipo de llamada</span>
+              <select id="tipoLlamada">
+                <option value="Nueva llamada">Nueva llamada</option>
+                <option value="Llamada por cobranza">Llamada por cobranza</option>
+              </select>
+            </label>
+
+            <button class="btn btn-primary btn-lg btn-block" id="btnIniciar" disabled>
+              <span class="btn-dot"></span>
+              Iniciar llamada
+            </button>
+
+            <!-- Timer compacto cuando está llamando -->
+            <div class="call-timer-box hidden" id="callTimerBox">
+              <div class="call-timer-row">
+                <span class="call-timer-label">⏱ Duración</span>
+                <strong class="call-timer-value mono" id="callTimer">00:00</strong>
+              </div>
+              <div class="call-timer-row">
+                <span class="call-timer-label">Inicio</span>
+                <span class="call-timer-value mono" id="dispHoraInicio">—</span>
+              </div>
+              <div class="call-timer-row hidden" id="dispHoraRespBox">
+                <span class="call-timer-label">Respondió</span>
+                <span class="call-timer-value mono" id="dispHoraResp">—</span>
+              </div>
             </div>
-            <div class="lead-info-row">
-              <span class="lead-info-label">Programa:</span>
-              <span class="lead-info-value" id="lbPrograma">—</span>
-              <span class="lead-info-sep">·</span>
-              <span class="lead-info-label">Situación:</span>
-              <span class="lead-info-value" id="lbSituacion">—</span>
+
+            <!-- Acciones iniciales: contestó / no contestó -->
+            <div class="call-actions-vertical hidden" id="callingActions1">
+              <button class="btn btn-success btn-block" id="btnRespondio" type="button">
+                ✓ Sí contestó
+              </button>
+              <button class="btn btn-danger btn-block" id="btnNoRespondio" type="button">
+                ✕ No contestó
+              </button>
             </div>
-            <div class="lead-info-row">
-              <span class="lead-info-label">Código:</span>
-              <span class="lead-info-value mono" id="lbCodigo">—</span>
+
+            <!-- Acción cuando ya respondió -->
+            <div class="hidden" id="callingActions2">
+              <button class="btn btn-primary btn-block" id="btnFinLlamada" type="button">
+                ⏺ Finalizar llamada
+              </button>
             </div>
-            <button class="btn btn-ghost btn-sm" type="button" id="btnLimpiarLead">✕ Quitar lead</button>
           </div>
-
-          <label class="field">
-            <span class="field-label">Contacto</span>
-            <input type="tel" id="inputContacto"
-                   placeholder="Ej. 51987654321"
-                   autocomplete="off" inputmode="numeric"
-                   maxlength="11" pattern="[0-9]{11}" />
-            <span class="field-hint" id="contactoHint">Solo 11 dígitos numéricos</span>
-          </label>
-
-          <label class="field">
-            <span class="field-label">Tipo de llamada</span>
-            <select id="tipoLlamada">
-              <option value="Nuevo lead">Nuevo lead</option>
-              <option value="Cobranza">Cobranza</option>
-              <option value="Invitación a demo">Invitación a demo</option>
-            </select>
-          </label>
-
-          <button class="btn btn-primary btn-lg" id="btnIniciar" disabled>
-            <span class="btn-dot"></span>
-            Iniciar llamada
-          </button>
         </div>
-      </div>
 
-      <!-- ETAPA SOON (próximamente cobranza/demo) -->
-      <div class="stage hidden" id="stage-soon">
-        <div class="card start-card soon-card">
-          <div class="soon-icon">🚧</div>
-          <h3 id="soonTitle">Próximamente</h3>
-          <p class="soon-text">Este tipo de llamada se gestionará más adelante.</p>
-          <button class="btn btn-primary btn-lg btn-block" id="btnVolverInicio" type="button">
-            ← Volver al inicio
-          </button>
-        </div>
-      </div>
+        <!-- ============================================ -->
+        <!-- COLUMNA DERECHA: ficha Kommo / formulario      -->
+        <!-- ============================================ -->
+        <div class="register-right">
 
-      <!-- ETAPA CALLING -->
-      <div class="stage hidden" id="stage-calling">
-        <div class="card calling-card">
+          <!-- Estado 1: SIN lead vinculado (mensaje guía) -->
+          <div class="card empty-lead-card" id="emptyLeadCard">
+            <div class="empty-icon">👤</div>
+            <h3>Sin lead vinculado</h3>
+            <p class="muted">
+              Para ver la ficha del lead aquí, ve a "Llamadas pendientes"
+              y presiona el botón <strong>📞 Llamar</strong> sobre cualquier lead.
+            </p>
+            <p class="muted">
+              También puedes escribir un número manualmente a la izquierda
+              y presionar "Iniciar llamada" si no está en Kommo.
+            </p>
+          </div>
 
-          <!-- Header de la llamada -->
-          <div class="call-header">
-            <div class="call-info">
-              <span class="call-info-label">Contacto</span>
-              <strong class="call-info-value mono" id="dispContacto">—</strong>
+          <!-- Estado 2: CON lead vinculado (ficha) -->
+          <div class="card hidden lead-card" id="leadCard">
+            <div class="lead-card-header">
+              <h3 class="lead-card-title" id="lcName">—</h3>
+              <button class="btn btn-ghost btn-sm" type="button" id="btnLimpiarLead">✕ Quitar</button>
             </div>
-            <div class="call-info">
-              <span class="call-info-label">Inicio</span>
-              <strong class="call-info-value mono" id="dispHoraInicio">—</strong>
+
+            <div class="lead-card-grid">
+              <div class="lead-field">
+                <span class="lead-field-label">Código</span>
+                <span class="lead-field-value mono" id="lcCodigo">—</span>
+              </div>
+              <div class="lead-field">
+                <span class="lead-field-label">Programa</span>
+                <span class="lead-field-value" id="lcPrograma">—</span>
+              </div>
+              <div class="lead-field">
+                <span class="lead-field-label">Situación</span>
+                <span class="lead-field-value" id="lcSituacion">—</span>
+              </div>
+              <div class="lead-field">
+                <span class="lead-field-label">Embudo</span>
+                <span class="lead-field-value" id="lcEmbudo">—</span>
+              </div>
+              <div class="lead-field">
+                <span class="lead-field-label">Universidad</span>
+                <span class="lead-field-value" id="lcUniversidad">—</span>
+              </div>
+              <div class="lead-field">
+                <span class="lead-field-label">Carrera</span>
+                <span class="lead-field-value" id="lcCarrera">—</span>
+              </div>
+              <div class="lead-field">
+                <span class="lead-field-label">Ciclo</span>
+                <span class="lead-field-value" id="lcCiclo">—</span>
+              </div>
+              <div class="lead-field">
+                <span class="lead-field-label">Distrito</span>
+                <span class="lead-field-value" id="lcDistrito">—</span>
+              </div>
+              <div class="lead-field">
+                <span class="lead-field-label">Presupuesto</span>
+                <span class="lead-field-value" id="lcPresupuesto">—</span>
+              </div>
+              <div class="lead-field">
+                <span class="lead-field-label">Descuento otorgado</span>
+                <span class="lead-field-value" id="lcDescuento">—</span>
+              </div>
+              <div class="lead-field full">
+                <span class="lead-field-label">Comentarios del cierre</span>
+                <span class="lead-field-value" id="lcCierre">—</span>
+              </div>
+              <div class="lead-field full">
+                <span class="lead-field-label">Objeciones</span>
+                <span class="lead-field-value" id="lcObjeciones">—</span>
+              </div>
+              <div class="lead-field full">
+                <span class="lead-field-label">Ex-entrenado</span>
+                <span class="lead-field-value" id="lcExEntrenado">—</span>
+              </div>
             </div>
-            <div class="call-info">
-              <span class="call-info-label">Duración</span>
-              <strong class="call-info-value mono" id="callTimer">00:00</strong>
+
+            <div class="lead-notes" id="lcNotasWrap">
+              <h4 class="lead-notes-title">📝 Comentarios de Kommo</h4>
+              <div id="lcNotas"></div>
             </div>
           </div>
 
-          <!-- Acciones iniciales: contestó / no contestó -->
-          <div class="call-actions" id="callingActions1">
-            <button class="btn btn-success btn-lg" id="btnRespondio" type="button">
-              ✓ Sí contestó
-            </button>
-            <button class="btn btn-danger btn-lg" id="btnNoRespondio" type="button">
-              ✕ No contestó
-            </button>
+          <!-- Estado 3: Cargando ficha -->
+          <div class="card hidden loading-card" id="leadLoading">
+            <span class="spinner"></span>
+            <p>Cargando datos del lead…</p>
           </div>
 
-          <!-- Acciones cuando ya respondió -->
-          <div class="call-actions hidden" id="callingActions2">
-            <button class="btn btn-primary btn-lg" id="btnFinLlamada" type="button">
-              ⏺ Finalizar llamada
+          <!-- Estado "Próximamente" (cobranza) -->
+          <div class="card hidden soon-card" id="soonCard">
+            <div class="soon-icon">🚧</div>
+            <h3 id="soonTitle">Próximamente</h3>
+            <p class="soon-text">Este tipo de llamada se gestionará más adelante.</p>
+            <button class="btn btn-primary" id="btnVolverInicio" type="button">
+              ← Volver al inicio
             </button>
-          </div>
-
-          <!-- Hora de respuesta -->
-          <div class="hidden" id="respondioInfo">
-            <p class="muted">Respondió a las <span class="mono" id="dispHoraResp">—</span>.</p>
           </div>
 
           <!-- ============================================ -->
           <!-- FORMULARIO: lado SÍ CONTESTÓ                  -->
           <!-- ============================================ -->
-          <div class="form-card hidden" id="liveForm">
+          <div class="card form-card hidden" id="liveForm">
+            <h3 class="form-title">📝 Datos de la llamada</h3>
 
             <div class="section-divider"><span>Resultado de la llamada</span></div>
 
@@ -334,7 +402,6 @@
               </div>
             </label>
 
-            <!-- Motivo no interés (solo si interés=No) -->
             <label class="field hidden" id="motivoNoInteresWrap">
               <span class="field-label">Motivo de no interés</span>
               <select id="motivoNoInteres">
@@ -352,25 +419,32 @@
               <input type="text" id="motivoNoInteresOtros" placeholder="Escribe el motivo…" />
             </label>
 
-            <label class="field">
-              <span class="field-label">Carrera</span>
-              <input type="text" id="carrera" placeholder="Ej. Ing. Industrial" />
-            </label>
-
-            <label class="field">
-              <span class="field-label">Provincia</span>
-              <input type="text" id="provincia" placeholder="Ej. Lima" />
-            </label>
-
-            <label class="field">
-              <span class="field-label">Edad</span>
-              <input type="number" id="edad" min="14" max="100" placeholder="Ej. 22" />
-            </label>
-
-            <label class="field check-field">
-              <input type="checkbox" id="demoCheck" />
-              <span>¿Se le ofreció una <strong>demo</strong>?</span>
-            </label>
+            <div class="form-grid-2">
+              <label class="field">
+                <span class="field-label">Universidad / Instituto</span>
+                <input type="text" id="universidad" placeholder="Ej. UNMSM" />
+              </label>
+              <label class="field">
+                <span class="field-label">Carrera</span>
+                <input type="text" id="carrera" placeholder="Ej. Ing. Industrial" />
+              </label>
+              <label class="field">
+                <span class="field-label">Ciclo</span>
+                <input type="text" id="ciclo" placeholder="Ej. 5to" />
+              </label>
+              <label class="field">
+                <span class="field-label">Distrito</span>
+                <input type="text" id="provincia" placeholder="Ej. Lima" />
+              </label>
+              <label class="field">
+                <span class="field-label">Edad</span>
+                <input type="number" id="edad" min="14" max="100" placeholder="Ej. 22" />
+              </label>
+              <label class="field check-field">
+                <input type="checkbox" id="demoCheck" />
+                <span>¿Se le ofreció una <strong>demo</strong>?</span>
+              </label>
+            </div>
 
             <div class="section-divider"><span>Seguimiento</span></div>
 
@@ -410,7 +484,7 @@
 
             <label class="field" id="razonLlamadaWrapYes">
               <span class="field-label" id="razonLlamadaLabelYes">
-                Razón <span class="req-mark" id="razonReqMarkYes">*</span>
+                Razón
               </span>
               <select id="razonNuevaLlamadaYes">
                 <option value="">Seleccionar…</option>
@@ -440,8 +514,8 @@
           <!-- ============================================ -->
           <!-- FORMULARIO: lado NO CONTESTÓ                  -->
           <!-- ============================================ -->
-          <div class="form-card hidden" id="noAnswerPanel">
-            <div class="section-divider"><span>No contestó</span></div>
+          <div class="card form-card hidden" id="noAnswerPanel">
+            <h3 class="form-title">📵 No contestó</h3>
 
             <label class="field">
               <span class="field-label">Motivo</span>
@@ -489,7 +563,7 @@
 
             <label class="field" id="razonLlamadaWrapNo">
               <span class="field-label" id="razonLlamadaLabelNo">
-                Razón <span class="req-mark" id="razonReqMarkNo">*</span>
+                Razón
               </span>
               <select id="razonNuevaLlamadaNo">
                 <option value="">Seleccionar…</option>
@@ -516,8 +590,8 @@
             </div>
           </div>
 
-        </div>
-      </div>
+        </div>  <!-- /register-right -->
+      </div>  <!-- /register-grid -->
     </section>
 
     <!-- ================================================ -->

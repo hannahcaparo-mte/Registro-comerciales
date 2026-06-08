@@ -192,18 +192,64 @@ tabs.forEach((tab) => {
 });
 
 /* ============================================================
-   STAGES (registrar nueva llamada)
+   ESTADO DE PANELES DE LA COLUMNA DERECHA
    ============================================================ */
-const stages = {
-  start:   document.getElementById("stage-start"),
-  calling: document.getElementById("stage-calling"),
-  soon:    document.getElementById("stage-soon"),
-};
-
-function showStage(name) {
-  Object.entries(stages).forEach(([key, el]) => {
-    if (el) el.classList.toggle("hidden", key !== name);
+// Posibles estados: 'empty', 'lead', 'loading', 'soon', 'liveForm', 'noAnswer'
+function showRightPanel(name) {
+  const ids = ["emptyLeadCard","leadCard","leadLoading","soonCard","liveForm","noAnswerPanel"];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const visible =
+      (name === "empty"     && id === "emptyLeadCard") ||
+      (name === "lead"      && id === "leadCard") ||
+      (name === "loading"   && id === "leadLoading") ||
+      (name === "soon"      && id === "soonCard") ||
+      (name === "liveForm"  && id === "liveForm") ||
+      (name === "noAnswer"  && id === "noAnswerPanel");
+    el.classList.toggle("hidden", !visible);
   });
+}
+
+// Mostrar/ocultar timer y acciones de la columna izquierda
+function showLeftCallControls(state) {
+  // state: 'idle' (botón Iniciar visible), 'preCall' (timer + sí/no), 'inCall' (timer + finalizar)
+  const btnIniciar = document.getElementById("btnIniciar");
+  const timerBox = document.getElementById("callTimerBox");
+  const a1 = document.getElementById("callingActions1");
+  const a2 = document.getElementById("callingActions2");
+
+  if (state === "idle") {
+    btnIniciar.classList.remove("hidden");
+    timerBox.classList.add("hidden");
+    a1.classList.add("hidden");
+    a2.classList.add("hidden");
+  } else if (state === "preCall") {
+    btnIniciar.classList.add("hidden");
+    timerBox.classList.remove("hidden");
+    a1.classList.remove("hidden");
+    a2.classList.add("hidden");
+  } else if (state === "inCall") {
+    btnIniciar.classList.add("hidden");
+    timerBox.classList.remove("hidden");
+    a1.classList.add("hidden");
+    a2.classList.remove("hidden");
+  }
+}
+
+// Compatibilidad con código viejo: showStage redirige
+function showStage(name) {
+  if (name === "start") {
+    showLeftCallControls("idle");
+    if (leadVinculado) showRightPanel("lead");
+    else showRightPanel("empty");
+  } else if (name === "calling") {
+    // Estado intermedio: timer y botones sí/no
+    showLeftCallControls("preCall");
+    // El panel derecho se mantiene (ficha del lead o vacío)
+  } else if (name === "soon") {
+    showRightPanel("soon");
+  }
 }
 
 /* ============================================================
@@ -233,24 +279,24 @@ function resetCallState() {
     horaFin: "", duracionSeg: 0, contesto: null, motivo: "",
     interes: "", calidadLead: "", llamarLuego: false,
     fechaProxContacto: "", horaProxContacto: "",
-    programa: "", carrera: "", provincia: "", edad: "",
+    programa: "", universidad: "", carrera: "", ciclo: "",
+    provincia: "", edad: "",
     motivoNoInteres: "", observacion: "", nombre: "",
     razonNuevaLlamada: "", ventaCerrada: "", demo: "",
   });
   leadVinculado = null;
 
-  // Reset UI
-  document.getElementById("liveForm").classList.add("hidden");
-  document.getElementById("noAnswerPanel").classList.add("hidden");
-  document.getElementById("callingActions1").classList.remove("hidden");
-  document.getElementById("callingActions2").classList.add("hidden");
-  document.getElementById("respondioInfo").classList.add("hidden");
+  // Reset UI: paneles derechos
+  showRightPanel("empty");
+  // Reset UI: controles izquierdos
+  showLeftCallControls("idle");
+  document.getElementById("dispHoraRespBox").classList.add("hidden");
 
   // Limpiar chips
   document.querySelectorAll(".chip.selected").forEach(c => c.classList.remove("selected"));
 
   // Limpiar inputs
-  ["carrera","provincia","edad","Nota","NotaNo",
+  ["universidad","carrera","ciclo","provincia","edad","Nota","NotaNo",
    "razonNuevaLlamadaOtrosYes","razonNuevaLlamadaOtrosNo",
    "motivoNoInteresOtros","inputContacto"].forEach(id => {
     const e = document.getElementById(id); if (e) e.value = "";
@@ -264,9 +310,6 @@ function resetCallState() {
   document.getElementById("proxContactoYesWrap").classList.add("hidden");
   document.getElementById("razonOtrosWrapYes").classList.add("hidden");
   document.getElementById("razonOtrosWrapNo").classList.add("hidden");
-
-  // Quitar banner del lead Kommo
-  document.getElementById("leadInfoBanner").classList.add("hidden");
 
   stopTimer();
   document.getElementById("callTimer").textContent = "00:00";
@@ -389,27 +432,36 @@ btnIniciar.addEventListener("click", () => {
   }
 
   const tipo = document.getElementById("tipoLlamada").value;
-  if (tipo !== "Nuevo lead") {
-    document.getElementById("soonTitle").textContent =
-      (tipo === "Cobranza") ? "Cobranza — Próximamente" : "Invitación a demo — Próximamente";
-    showStage("soon");
+  if (tipo === "Llamada por cobranza") {
+    document.getElementById("soonTitle").textContent = "Llamada por cobranza — Próximamente";
+    showRightPanel("soon");
     return;
   }
 
+  // Nueva llamada → iniciar flujo
   callState.contacto = contacto;
   callState.fecha = nowDate();
   callState.horaInicio = nowTime();
 
-  document.getElementById("dispContacto").textContent = contacto;
   document.getElementById("dispHoraInicio").textContent = callState.horaInicio;
 
+  // Prellenar campos del formulario con datos del lead Kommo (si hay)
+  if (leadVinculado) {
+    document.getElementById("universidad").value = leadVinculado.universidad || "";
+    document.getElementById("carrera").value = leadVinculado.carrera || "";
+    document.getElementById("ciclo").value = leadVinculado.ciclo || "";
+    document.getElementById("provincia").value = leadVinculado.distrito || "";
+    // Programa ya está en callState.programa, no hay input para él
+  }
+
   startTimer();
-  showStage("calling");
+  showLeftCallControls("preCall");
+  // Panel derecho: si hay lead, sigue mostrando la ficha; sino, queda en empty
 });
 
 document.getElementById("btnVolverInicio").addEventListener("click", () => {
   inputContacto.value = "";
-  document.getElementById("tipoLlamada").value = "Nuevo lead";
+  document.getElementById("tipoLlamada").value = "Nueva llamada";
   btnIniciar.disabled = true;
   resetCallState();
   showStage("start");
@@ -421,7 +473,7 @@ document.getElementById("btnLimpiarLead").addEventListener("click", () => {
   callState.codigo = "";
   callState.programa = "";
   callState.nombre = "";
-  document.getElementById("leadInfoBanner").classList.add("hidden");
+  showRightPanel("empty");
   inputContacto.value = "";
   inputContacto.dispatchEvent(new Event("input", { bubbles: true }));
 });
@@ -432,16 +484,14 @@ document.getElementById("btnLimpiarLead").addEventListener("click", () => {
 document.getElementById("btnRespondio").addEventListener("click", () => {
   callState.horaContesta = nowTime();
   document.getElementById("dispHoraResp").textContent = callState.horaContesta;
-  document.getElementById("respondioInfo").classList.remove("hidden");
-  document.getElementById("callingActions1").classList.add("hidden");
-  document.getElementById("callingActions2").classList.remove("hidden");
+  document.getElementById("dispHoraRespBox").classList.remove("hidden");
+  showLeftCallControls("inCall");
 });
 
 document.getElementById("btnFinLlamada").addEventListener("click", () => {
   stopTimer();
   callState.horaFin = nowTime();
-  document.getElementById("noAnswerPanel").classList.add("hidden");
-  document.getElementById("liveForm").classList.remove("hidden");
+  showRightPanel("liveForm");
 });
 
 /* ============================================================
@@ -451,8 +501,7 @@ document.getElementById("btnNoRespondio").addEventListener("click", () => {
   stopTimer();
   callState.contesto = false;
   callState.horaFin = nowTime();
-  document.getElementById("liveForm").classList.add("hidden");
-  document.getElementById("noAnswerPanel").classList.remove("hidden");
+  showRightPanel("noAnswer");
 });
 
 /* ============================================================
@@ -472,7 +521,9 @@ function recolectarFormularioYes() {
     callState.motivoNoInteres = m;
   }
 
+  callState.universidad = document.getElementById("universidad").value.trim();
   callState.carrera = document.getElementById("carrera").value.trim();
+  callState.ciclo = document.getElementById("ciclo").value.trim();
   callState.provincia = document.getElementById("provincia").value.trim();
   callState.edad = document.getElementById("edad").value.trim();
   callState.demo = document.getElementById("demoCheck").checked ? "Sí" : "";
@@ -882,29 +933,103 @@ function renderLeads() {
 }
 
 function llamarLeadDesdeKommo(d) {
-  // Ir a Registrar y prellenar
+  // Ir a Registrar
   document.querySelector('.tab[data-tab="register"]').click();
-  showStage("start");
 
   // Llenar input contacto
   const tel = String(d.tel || "").replace(/\D/g, "").slice(0, 11);
   inputContacto.value = tel;
   inputContacto.dispatchEvent(new Event("input", { bubbles: true }));
 
-  // Guardar info del lead
-  leadVinculado = d;
+  // Guardar info básica del lead (lo que ya tenemos de la lista)
+  leadVinculado = {
+    id: d.id,
+    nombre: d.nombre || "",
+    programa: d.prog || "",
+    situacion: d.sit || "",
+    etapa: d.etapa || "",
+    embudoNombre: "",
+    // Lo demás se llena cuando responde el endpoint kommoLeadDetalle
+    universidad: "", carrera: "", ciclo: "", distrito: "",
+    presupuesto: "", descuentoOtorgado: "", comentariosCierre: "",
+    objeciones: "", exEntrenado: "",
+    notas: []
+  };
   callState.codigo = String(d.id || "");
   callState.programa = d.prog || "";
   callState.nombre = d.nombre || "";
 
-  // Mostrar banner con info
-  document.getElementById("lbName").textContent = d.nombre || "—";
-  document.getElementById("lbPrograma").textContent = d.prog || "—";
-  document.getElementById("lbSituacion").textContent = d.sit || "—";
-  document.getElementById("lbCodigo").textContent = d.id || "—";
-  document.getElementById("leadInfoBanner").classList.remove("hidden");
+  // Mostrar ficha con datos básicos primero, mientras se cargan los detalles
+  renderLeadCard(leadVinculado);
+  showRightPanel("loading");
+
+  // Pedir detalle completo a Kommo
+  jsonpGet({
+    accion: "kommoLeadDetalle",
+    leadId: d.id,
+  }, (resp) => {
+    if (!resp || !resp.ok) {
+      // Mostramos lo que ya tenemos (datos básicos)
+      renderLeadCard(leadVinculado);
+      showRightPanel("lead");
+      showToast("No se pudo cargar detalle completo: " + ((resp && resp.error) || "error"), true);
+      return;
+    }
+    const det = resp.lead;
+    // Mezclar con leadVinculado existente
+    Object.assign(leadVinculado, det);
+    // Mantener la situación amigable que ya tenemos
+    leadVinculado.situacion = d.sit || det.etapaNombre;
+
+    renderLeadCard(leadVinculado);
+    showRightPanel("lead");
+  });
 
   showToast(`Lead ${d.nombre} listo. Presiona "Iniciar llamada".`);
+}
+
+// Pinta la ficha del lead en la columna derecha
+function renderLeadCard(L) {
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || "—";
+  };
+
+  set("lcName", L.nombre);
+  set("lcCodigo", L.id);
+  set("lcPrograma", L.programa);
+  set("lcSituacion", L.situacion);
+  set("lcEmbudo", L.embudoNombre);
+  set("lcUniversidad", L.universidad);
+  set("lcCarrera", L.carrera);
+  set("lcCiclo", L.ciclo);
+  set("lcDistrito", L.distrito);
+  set("lcPresupuesto", L.presupuesto);
+  set("lcDescuento", L.descuentoOtorgado);
+  set("lcCierre", L.comentariosCierre);
+  set("lcObjeciones", L.objeciones);
+  set("lcExEntrenado", L.exEntrenado);
+
+  // Notas: solo con contenido
+  const notasEl = document.getElementById("lcNotas");
+  const wrap = document.getElementById("lcNotasWrap");
+  const notas = (L.notas || []).filter(n => n.texto && n.texto.trim());
+
+  if (notas.length === 0) {
+    wrap.classList.add("hidden");
+    notasEl.innerHTML = "";
+  } else {
+    wrap.classList.remove("hidden");
+    notasEl.innerHTML = notas.map(n => {
+      const fechaCorta = (n.fecha || "").substring(0, 10);
+      return `
+        <div class="lead-note-item">
+          <div class="lead-note-date">${escapeHtml(fechaCorta)}</div>
+          <div class="lead-note-text">${escapeHtml(n.texto)}</div>
+        </div>
+      `;
+    }).join("");
+  }
 }
 
 /* ============================================================
