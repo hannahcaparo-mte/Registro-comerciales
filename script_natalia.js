@@ -8,7 +8,7 @@ const STORAGE_KEY = "registroNatalia_v4";
 
 // URL del Apps Script publicado (la misma para las 4 comerciales).
 // Reemplaza con tu URL real (la pegaste en versiones anteriores).
-const SHEETS_WEBAPP_URL = "https://script.google.com/a/macros/mte.com.pe/s/AKfycbx-fk7WOoUC3T2DXAkNmSMllVvP72HFsYmcVIokVijrSm7wZA6J6Z4Yig8nEHl8vnXNCw/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxDlC3YncCd7D_MgI6KJjTywR74IRvEVXa4wvAMslUyXBQ3A7Xn5hqD5NjPARGDP48BmA/exec";
 
 /* ============================================================
    ESTADO GLOBAL
@@ -192,64 +192,78 @@ tabs.forEach((tab) => {
 });
 
 /* ============================================================
-   ESTADO DE PANELES DE LA COLUMNA DERECHA
+   SISTEMA DE FASES (4 fases de la llamada)
+   ------------------------------------------------------------
+   Fase 1: ANTES (form de contacto + Iniciar)
+   Fase 2: MARCANDO (timer + botones Sí/No contestó)
+   Fase 3: EN LLAMADA (timer + botón Fin de la interacción)
+   Fase 4: POST-LLAMADA (timer + Cancelar / Guardar)
    ============================================================ */
-// Posibles estados: 'empty', 'lead', 'loading', 'soon', 'liveForm', 'noAnswer'
+let faseActual = 1;
+
+function setFase(fase) {
+  faseActual = fase;
+
+  // Cajas de la izquierda
+  const phase1 = document.getElementById("leftPhase1");
+  const callBox = document.getElementById("leftCallBox");
+  const ph2 = document.getElementById("callPhase2Actions");
+  const ph3 = document.getElementById("callPhase3Actions");
+  const ph4 = document.getElementById("callPhase4Actions");
+
+  if (fase === 1) {
+    phase1.classList.remove("hidden");
+    callBox.classList.add("hidden");
+  } else {
+    phase1.classList.add("hidden");
+    callBox.classList.remove("hidden");
+    ph2.classList.toggle("hidden", fase !== 2);
+    ph3.classList.toggle("hidden", fase !== 3);
+    ph4.classList.toggle("hidden", fase !== 4);
+  }
+}
+
+/* ============================================================
+   PANELES DE LA COLUMNA DERECHA
+   ------------------------------------------------------------
+   Posibles: 'empty', 'lead', 'loading', 'soon', 'form'
+   ============================================================ */
 function showRightPanel(name) {
-  const ids = ["emptyLeadCard","leadCard","leadLoading","soonCard","liveForm","noAnswerPanel"];
+  const ids = ["emptyLeadCard","leadCard","leadLoading","soonCard","liveForm"];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const visible =
-      (name === "empty"     && id === "emptyLeadCard") ||
-      (name === "lead"      && id === "leadCard") ||
-      (name === "loading"   && id === "leadLoading") ||
-      (name === "soon"      && id === "soonCard") ||
-      (name === "liveForm"  && id === "liveForm") ||
-      (name === "noAnswer"  && id === "noAnswerPanel");
+      (name === "empty"   && id === "emptyLeadCard") ||
+      (name === "lead"    && id === "leadCard") ||
+      (name === "loading" && id === "leadLoading") ||
+      (name === "soon"    && id === "soonCard") ||
+      (name === "form"    && id === "liveForm");
     el.classList.toggle("hidden", !visible);
   });
 }
 
-// Mostrar/ocultar timer y acciones de la columna izquierda
-function showLeftCallControls(state) {
-  // state: 'idle' (botón Iniciar visible), 'preCall' (timer + sí/no), 'inCall' (timer + finalizar)
-  const btnIniciar = document.getElementById("btnIniciar");
-  const timerBox = document.getElementById("callTimerBox");
-  const a1 = document.getElementById("callingActions1");
-  const a2 = document.getElementById("callingActions2");
-
-  if (state === "idle") {
-    btnIniciar.classList.remove("hidden");
-    timerBox.classList.add("hidden");
-    a1.classList.add("hidden");
-    a2.classList.add("hidden");
-  } else if (state === "preCall") {
-    btnIniciar.classList.add("hidden");
-    timerBox.classList.remove("hidden");
-    a1.classList.remove("hidden");
-    a2.classList.add("hidden");
-  } else if (state === "inCall") {
-    btnIniciar.classList.add("hidden");
-    timerBox.classList.remove("hidden");
-    a1.classList.add("hidden");
-    a2.classList.remove("hidden");
-  }
+// Bar de "Quitar lead": visible solo si hay lead vinculado
+function actualizarQuitarLeadBar() {
+  document.getElementById("quitarLeadBar").classList.toggle("hidden", !leadVinculado);
 }
 
-// Compatibilidad con código viejo: showStage redirige
+// Compatibilidad con código viejo
 function showStage(name) {
   if (name === "start") {
-    showLeftCallControls("idle");
+    setFase(1);
     if (leadVinculado) showRightPanel("lead");
     else showRightPanel("empty");
-  } else if (name === "calling") {
-    // Estado intermedio: timer y botones sí/no
-    showLeftCallControls("preCall");
-    // El panel derecho se mantiene (ficha del lead o vacío)
+    actualizarQuitarLeadBar();
   } else if (name === "soon") {
     showRightPanel("soon");
   }
+}
+function showLeftCallControls(state) {
+  // Wrapper de compatibilidad
+  if (state === "idle") setFase(1);
+  else if (state === "preCall") setFase(2);
+  else if (state === "inCall") setFase(3);
 }
 
 /* ============================================================
@@ -295,24 +309,24 @@ function resetCallState() {
   // Limpiar chips
   document.querySelectorAll(".chip.selected").forEach(c => c.classList.remove("selected"));
 
-  // Limpiar inputs
-  ["universidad","carrera","ciclo","provincia","edad","Nota","NotaNo",
-   "razonNuevaLlamadaOtrosYes","razonNuevaLlamadaOtrosNo",
+  // Limpiar inputs (solo los que existen ahora)
+  ["universidad","carrera","ciclo","provincia","edad","Nota",
+   "razonNuevaLlamadaOtrosYes",
    "motivoNoInteresOtros","inputContacto"].forEach(id => {
     const e = document.getElementById(id); if (e) e.value = "";
   });
-  document.getElementById("demoCheck").checked = false;
-  document.getElementById("llamarLuegoYes").checked = false;
-  document.getElementById("volverLlamarNo").checked = true;
-  document.getElementById("motivoNoInteres").value = "";
-  document.getElementById("motivoNoInteresWrap").classList.add("hidden");
-  document.getElementById("motivoOtrosWrap").classList.add("hidden");
-  document.getElementById("proxContactoYesWrap").classList.add("hidden");
-  document.getElementById("razonOtrosWrapYes").classList.add("hidden");
-  document.getElementById("razonOtrosWrapNo").classList.add("hidden");
+  const dc = document.getElementById("demoCheck"); if (dc) dc.checked = false;
+  const ll = document.getElementById("llamarLuegoYes"); if (ll) ll.checked = false;
+  const mn = document.getElementById("motivoNoInteres"); if (mn) mn.value = "";
+  ["motivoNoInteresWrap","motivoOtrosWrap","proxContactoYesWrap","razonOtrosWrapYes","seccionContesto","seccionNoContesto"].forEach(id => {
+    const e = document.getElementById(id); if (e) e.classList.add("hidden");
+  });
 
   stopTimer();
   document.getElementById("callTimer").textContent = "00:00";
+
+  // Ocultar barra "Quitar lead" porque ya no hay lead vinculado
+  actualizarQuitarLeadBar();
 }
 
 /* ============================================================
@@ -390,9 +404,8 @@ function bindRazonOtros(selectId, wrapId, inputId) {
   });
 }
 bindRazonOtros("razonNuevaLlamadaYes", "razonOtrosWrapYes", "razonNuevaLlamadaOtrosYes");
-bindRazonOtros("razonNuevaLlamadaNo", "razonOtrosWrapNo", "razonNuevaLlamadaOtrosNo");
 
-// Toggle "Llamar luego" del lado Sí contestó
+// Toggle "Llamar luego" — único toggle del seguimiento
 document.getElementById("llamarLuegoYes").addEventListener("change", (e) => {
   document.getElementById("proxContactoYesWrap").classList.toggle("hidden", !e.target.checked);
   const ops = e.target.checked ? OPCIONES_RAZON_SI : OPCIONES_RAZON_NO;
@@ -400,17 +413,8 @@ document.getElementById("llamarLuegoYes").addEventListener("change", (e) => {
   llenarOpcionesRazon("razonNuevaLlamadaYes", "razonLlamadaLabelYes", ops, eti, "razonReqMarkYes");
 });
 
-// Toggle "Volver a llamar" del lado No contestó
-document.getElementById("volverLlamarNo").addEventListener("change", (e) => {
-  document.getElementById("proxContactoNoWrap").classList.toggle("hidden", !e.target.checked);
-  const ops = e.target.checked ? OPCIONES_RAZON_SI : OPCIONES_RAZON_NO;
-  const eti = e.target.checked ? "Razón de la nueva llamada" : "Razón por la que no se llamará";
-  llenarOpcionesRazon("razonNuevaLlamadaNo", "razonLlamadaLabelNo", ops, eti, "razonReqMarkNo");
-});
-
-// Inicializar opciones por defecto
+// Inicializar opciones por defecto (checkbox empieza desmarcado → "no llamar luego" → razones de NO)
 llenarOpcionesRazon("razonNuevaLlamadaYes", "razonLlamadaLabelYes", OPCIONES_RAZON_NO, "Razón por la que no se llamará", "razonReqMarkYes");
-llenarOpcionesRazon("razonNuevaLlamadaNo", "razonLlamadaLabelNo", OPCIONES_RAZON_SI, "Razón de la nueva llamada", "razonReqMarkNo");
 
 /* ============================================================
    INICIO: input contacto + botón iniciar
@@ -438,12 +442,15 @@ btnIniciar.addEventListener("click", () => {
     return;
   }
 
-  // Nueva llamada → iniciar flujo
+  // Nueva llamada → iniciar flujo, FASE 2
   callState.contacto = contacto;
   callState.fecha = nowDate();
   callState.horaInicio = nowTime();
 
+  // Llenar números visibles en la columna izquierda
+  document.getElementById("dispContacto").textContent = contacto;
   document.getElementById("dispHoraInicio").textContent = callState.horaInicio;
+  document.getElementById("dispHoraRespBox").classList.add("hidden");
 
   // Prellenar campos del formulario con datos del lead Kommo (si hay)
   if (leadVinculado) {
@@ -451,12 +458,14 @@ btnIniciar.addEventListener("click", () => {
     document.getElementById("carrera").value = leadVinculado.carrera || "";
     document.getElementById("ciclo").value = leadVinculado.ciclo || "";
     document.getElementById("provincia").value = leadVinculado.distrito || "";
-    // Programa ya está en callState.programa, no hay input para él
   }
 
   startTimer();
-  showLeftCallControls("preCall");
-  // Panel derecho: si hay lead, sigue mostrando la ficha; sino, queda en empty
+  setFase(2);                  // izquierda: timer + Sí/No contestó
+  showRightPanel("form");      // derecha: formulario unificado
+  // Reset interno del formulario (chips/secciones)
+  document.getElementById("seccionContesto").classList.add("hidden");
+  document.getElementById("seccionNoContesto").classList.add("hidden");
 });
 
 document.getElementById("btnVolverInicio").addEventListener("click", () => {
@@ -469,65 +478,118 @@ document.getElementById("btnVolverInicio").addEventListener("click", () => {
 });
 
 document.getElementById("btnLimpiarLead").addEventListener("click", () => {
-  leadVinculado = null;
-  callState.codigo = "";
-  callState.programa = "";
-  callState.nombre = "";
-  showRightPanel("empty");
-  inputContacto.value = "";
-  inputContacto.dispatchEvent(new Event("input", { bubbles: true }));
+  // Si está en medio de una llamada (fase 2-4), pedir confirmación
+  if (faseActual > 1) {
+    if (!confirm("¿Estás segura de eliminar la información de esta llamada? Se perderán todos los datos ingresados.")) {
+      return;
+    }
+  }
+  resetCallState();
+  showStage("start");
 });
 
 /* ============================================================
    FLUJO: SÍ CONTESTÓ
    ============================================================ */
 document.getElementById("btnRespondio").addEventListener("click", () => {
+  callState.contesto = true;
   callState.horaContesta = nowTime();
   document.getElementById("dispHoraResp").textContent = callState.horaContesta;
   document.getElementById("dispHoraRespBox").classList.remove("hidden");
-  showLeftCallControls("inCall");
-});
-
-document.getElementById("btnFinLlamada").addEventListener("click", () => {
-  stopTimer();
-  callState.horaFin = nowTime();
-  showRightPanel("liveForm");
+  setFase(3);                  // izquierda: botón "Fin de la interacción"
+  // En el formulario, mostrar sección de "contestó", marcar el chip Sí
+  document.getElementById("seccionContesto").classList.remove("hidden");
+  document.getElementById("seccionNoContesto").classList.add("hidden");
+  marcarChip("contestoGroup", "Sí");
 });
 
 /* ============================================================
    FLUJO: NO CONTESTÓ
    ============================================================ */
 document.getElementById("btnNoRespondio").addEventListener("click", () => {
-  stopTimer();
   callState.contesto = false;
+  callState.horaContesta = "";
+  document.getElementById("dispHoraRespBox").classList.add("hidden");
+  setFase(3);                  // izquierda: botón "Fin de la interacción"
+  // En el formulario, mostrar sección de "no contestó", marcar el chip No
+  document.getElementById("seccionContesto").classList.add("hidden");
+  document.getElementById("seccionNoContesto").classList.remove("hidden");
+  marcarChip("contestoGroup", "No");
+});
+
+// Helper para marcar un chip por su valor sin disparar onSelect
+function marcarChip(groupId, valor) {
+  const g = document.getElementById(groupId);
+  if (!g) return;
+  g.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
+  const target = g.querySelector(`.chip[data-value="${valor}"]`);
+  if (target) target.classList.add("selected");
+}
+
+/* ============================================================
+   FLUJO: FIN DE LA INTERACCIÓN (fase 3 → 4)
+   ============================================================ */
+document.getElementById("btnFinInteraccion").addEventListener("click", () => {
+  stopTimer();
   callState.horaFin = nowTime();
-  showRightPanel("noAnswer");
+  setFase(4);    // izquierda: Cancelar / Guardar
+  // El formulario sigue visible para revisar/completar
 });
 
 /* ============================================================
    GUARDAR LLAMADA
    ============================================================ */
-function recolectarFormularioYes() {
-  // Datos del formulario "sí contestó"
-  callState.calidadLead = callState.calidadLead || "";
-  callState.interes = callState.interes || "";
+function composeTime(hourSel, minSel, ampmSel) {
+  const h = document.getElementById(hourSel).value;
+  const m = document.getElementById(minSel).value || "00";
+  const apRaw = document.getElementById(ampmSel).value;
+  if (!h) return "";
+  const esPM = String(apRaw || "").toLowerCase().indexOf("p") !== -1;
+  return `${h}:${m} ${esPM ? "p.m." : "a.m."}`;
+}
 
-  // Motivo no interés (con Otros)
-  const m = document.getElementById("motivoNoInteres").value;
-  if (m === "Otros") {
-    const o = document.getElementById("motivoNoInteresOtros").value.trim();
-    callState.motivoNoInteres = o ? `Otros: ${o}` : "Otros";
+document.getElementById("btnGuardarLlamada").addEventListener("click", () => {
+  recolectarFormulario();
+  saveCall();
+});
+
+document.getElementById("btnCancelarLlamada").addEventListener("click", () => {
+  if (confirm("¿Cancelar el registro de esta llamada? Se perderán los datos ingresados.")) {
+    resetCallState();
+    showStage("start");
+  }
+});
+
+/* ============================================================
+   FUNCIÓN UNIFICADA: recoger todo del formulario único
+   ============================================================ */
+function recolectarFormulario() {
+  // Si contestó (sección A)
+  if (callState.contesto === true) {
+    callState.calidadLead = callState.calidadLead || "";
+    callState.interes = callState.interes || "";
+
+    // Motivo no interés (con Otros)
+    const m = document.getElementById("motivoNoInteres").value;
+    if (m === "Otros") {
+      const o = document.getElementById("motivoNoInteresOtros").value.trim();
+      callState.motivoNoInteres = o ? `Otros: ${o}` : "Otros";
+    } else {
+      callState.motivoNoInteres = m;
+    }
+
+    callState.universidad = document.getElementById("universidad").value.trim();
+    callState.carrera = document.getElementById("carrera").value.trim();
+    callState.ciclo = document.getElementById("ciclo").value.trim();
+    callState.provincia = document.getElementById("provincia").value.trim();
+    callState.edad = document.getElementById("edad").value.trim();
+    callState.demo = document.getElementById("demoCheck").checked ? "Sí" : "";
   } else {
-    callState.motivoNoInteres = m;
+    // No contestó: motivo de la sección B ya se guardó en callState.motivo
+    // (vía chip-group con onSelect)
   }
 
-  callState.universidad = document.getElementById("universidad").value.trim();
-  callState.carrera = document.getElementById("carrera").value.trim();
-  callState.ciclo = document.getElementById("ciclo").value.trim();
-  callState.provincia = document.getElementById("provincia").value.trim();
-  callState.edad = document.getElementById("edad").value.trim();
-  callState.demo = document.getElementById("demoCheck").checked ? "Sí" : "";
-
+  // Seguimiento (común a ambos)
   callState.llamarLuego = document.getElementById("llamarLuegoYes").checked;
   if (callState.llamarLuego) {
     callState.fechaProxContacto = document.getElementById("proxContactoYes").value;
@@ -537,7 +599,6 @@ function recolectarFormularioYes() {
     callState.horaProxContacto = "";
   }
 
-  // Razón
   const rs = document.getElementById("razonNuevaLlamadaYes").value;
   if (rs === "Otros") {
     const o = document.getElementById("razonNuevaLlamadaOtrosYes").value.trim();
@@ -548,60 +609,6 @@ function recolectarFormularioYes() {
 
   callState.observacion = document.getElementById("Nota").value.trim();
 }
-
-function recolectarFormularioNo() {
-  callState.llamarLuego = document.getElementById("volverLlamarNo").checked;
-  if (callState.llamarLuego) {
-    callState.fechaProxContacto = document.getElementById("proxContactoNo").value;
-    callState.horaProxContacto = composeTime("proxHoraNoH","proxHoraNoM","proxHoraNoAP");
-  } else {
-    callState.fechaProxContacto = "";
-    callState.horaProxContacto = "";
-  }
-
-  const rs = document.getElementById("razonNuevaLlamadaNo").value;
-  if (rs === "Otros") {
-    const o = document.getElementById("razonNuevaLlamadaOtrosNo").value.trim();
-    callState.razonNuevaLlamada = o ? `Otros: ${o}` : "Otros";
-  } else {
-    callState.razonNuevaLlamada = rs;
-  }
-
-  callState.observacion = document.getElementById("NotaNo").value.trim();
-}
-
-function composeTime(hourSel, minSel, ampmSel) {
-  const h = document.getElementById(hourSel).value;
-  const m = document.getElementById(minSel).value || "00";
-  const apRaw = document.getElementById(ampmSel).value;
-  if (!h) return "";
-  const esPM = String(apRaw || "").toLowerCase().indexOf("p") !== -1;
-  return `${h}:${m} ${esPM ? "p.m." : "a.m."}`;
-}
-
-document.getElementById("btnGuardarYes").addEventListener("click", () => {
-  recolectarFormularioYes();
-  saveCall();
-});
-
-document.getElementById("btnGuardarNo").addEventListener("click", () => {
-  recolectarFormularioNo();
-  saveCall();
-});
-
-document.getElementById("btnCancelarYes").addEventListener("click", () => {
-  if (confirm("¿Cancelar el registro de esta llamada?")) {
-    resetCallState();
-    showStage("start");
-  }
-});
-
-document.getElementById("btnCancelarNo").addEventListener("click", () => {
-  if (confirm("¿Cancelar?")) {
-    resetCallState();
-    showStage("start");
-  }
-});
 
 function saveCall() {
   const contesto = (callState.contesto === true) ? "Sí" : (callState.contesto === false ? "No" : "");
@@ -958,6 +965,9 @@ function llamarLeadDesdeKommo(d) {
   callState.codigo = String(d.id || "");
   callState.programa = d.prog || "";
   callState.nombre = d.nombre || "";
+
+  // Mostrar la barra "Quitar lead"
+  actualizarQuitarLeadBar();
 
   // Mostrar ficha con datos básicos primero, mientras se cargan los detalles
   renderLeadCard(leadVinculado);

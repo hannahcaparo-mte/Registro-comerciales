@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Administrador · Tamia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles_tamia.css" />
+</head>
+<body>
+
+  <!-- ====== HEADER ====== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <img src="LOGO.png" alt="Logo" class="brand-logo" onerror="this.style.display='none';" />
+        <div class="brand-text">
+          <span class="brand-label">Administradora</span>
+          <h1 class="brand-name">Tamia</h1>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="datetime">
+          <div class="dt-block">
+            <span class="dt-label">Fecha de hoy</span>
+            <span class="dt-value" id="currentDate">—</span>
+          </div>
+          <div class="dt-divider"></div>
+          <div class="dt-block">
+            <span class="dt-label">Hora</span>
+            <span class="dt-value mono" id="currentTime">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====== CONTENIDO ====== -->
+  <main class="app-main">
+
+    <div class="panel-head">
+      <h2 class="panel-title">Configuración de programas</h2>
+      <p class="panel-sub">
+        Elige qué programas están en campaña y quién tiene acceso a cada uno.
+        Los cambios pueden tardar hasta 1 minuto en aparecer para las comerciales.
+      </p>
+      <div class="tamia-actions-top">
+        <button class="btn btn-ghost" id="btnSincronizar" type="button">
+          🔄 Sincronizar con Kommo
+        </button>
+        <button class="btn btn-primary" id="btnGuardar" type="button" disabled>
+          💾 Guardar cambios
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado de carga -->
+    <div class="card" id="loadingCard">
+      <div class="empty-state">
+        <span class="spinner"></span>
+        <p>Cargando configuración…</p>
+      </div>
+    </div>
+
+    <!-- Estado de error -->
+    <div class="card hidden" id="errorCard">
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <p id="errorMsg">Error al cargar</p>
+        <button class="btn btn-primary" id="btnReintentar" type="button">Reintentar</button>
+      </div>
+    </div>
+
+    <!-- Configuración -->
+    <div class="hidden" id="configWrap">
+
+      <!-- Toggle vista compacta / expandida -->
+      <div class="tamia-controls">
+        <div class="tamia-info">
+          <span class="badge-info" id="programasCount">— programas</span>
+          <span class="badge-info" id="enCampanaCount">— en campaña</span>
+        </div>
+        <div class="tamia-search">
+          <input type="text" id="filtroPrograma" placeholder="🔍 Buscar programa…" />
+        </div>
+      </div>
+
+      <!-- Tabla de configuración -->
+      <div class="card">
+        <div class="table-wrap">
+          <table class="tamia-table">
+            <thead>
+              <tr>
+                <th class="col-programa">Programa</th>
+                <th class="col-campana">En campaña</th>
+                <th class="col-comercial">
+                  <div class="comercial-avatar avatar-natalia">N</div>
+                  <div>Natalia</div>
+                </th>
+                <th class="col-comercial">
+                  <div class="comercial-avatar avatar-angela">A</div>
+                  <div>Angela</div>
+                </th>
+                <th class="col-comercial">
+                  <div class="comercial-avatar avatar-rosemary">R</div>
+                  <div>Rosemary</div>
+                </th>
+                <th class="col-comercial">
+                  <div class="comercial-avatar avatar-nirvana">N</div>
+                  <div>Nirvana</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="configBody"></tbody>
+          </table>
+        </div>
+
+        <div class="empty-state hidden" id="emptyFilter">
+          <p class="muted">Sin coincidencias.</p>
+        </div>
+      </div>
+
+      <!-- Acciones bulk -->
+      <div class="card bulk-actions-card">
+        <h3 class="card-title">Acciones rápidas</h3>
+        <div class="bulk-actions-row">
+          <button class="btn btn-secondary btn-sm" data-bulk="allCampana">
+            ✓ Marcar todos "En campaña"
+          </button>
+          <button class="btn btn-secondary btn-sm" data-bulk="noneCampana">
+            ✕ Desmarcar todos "En campaña"
+          </button>
+        </div>
+        <div class="bulk-actions-row">
+          <button class="btn btn-secondary btn-sm" data-bulk="allNatalia">
+            + Todo a Natalia
+          </button>
+          <button class="btn btn-secondary btn-sm" data-bulk="noneNatalia">
+            − Nada a Natalia
+          </button>
+          <button class="btn btn-secondary btn-sm" data-bulk="allAngela">
+            + Todo a Angela
+          </button>
+          <button class="btn btn-secondary btn-sm" data-bulk="noneAngela">
+            − Nada a Angela
+          </button>
+          <button class="btn btn-secondary btn-sm" data-bulk="allRosemary">
+            + Todo a Rosemary
+          </button>
+          <button class="btn btn-secondary btn-sm" data-bulk="noneRosemary">
+            − Nada a Rosemary
+          </button>
+          <button class="btn btn-secondary btn-sm" data-bulk="allNirvana">
+            + Todo a Nirvana
+          </button>
+          <button class="btn btn-secondary btn-sm" data-bulk="noneNirvana">
+            − Nada a Nirvana
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Barra fija de guardar -->
+  <div class="save-bar hidden" id="saveBar">
+    <span class="save-msg">Tienes cambios sin guardar</span>
+    <div class="save-actions">
+      <button class="btn btn-secondary" id="btnDescartar" type="button">Descartar</button>
+      <button class="btn btn-primary" id="btnGuardarBottom" type="button">💾 Guardar cambios</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script_tamia.js"></script>
+</body>
+</html>
