@@ -193,22 +193,51 @@
     </section>
 
     <!-- ================================================ -->
-    <!-- PESTAÑA 3: REGISTRAR NUEVA LLAMADA                -->
+    <!-- PESTAÑA 3: REGISTRAR NUEVA LLAMADA (REDISEÑADA)   -->
     <!-- ================================================ -->
     <section class="tab-panel" id="panel-register">
       <div class="panel-head">
         <h2 class="panel-title">Registrar nueva llamada</h2>
-        <p class="panel-sub" id="registerSub">Ingresa los datos del lead y la llamada.</p>
+        <p class="panel-sub">Ingresa el número o llega desde "Llamadas pendientes".</p>
       </div>
 
-      <!-- Layout en 2 columnas: izquierda contacto, derecha ficha + form -->
       <div class="register-grid">
 
         <!-- ============================================ -->
-        <!-- COLUMNA IZQUIERDA: contacto + tipo + botón     -->
+        <!-- COLUMNA IZQUIERDA                             -->
         <!-- ============================================ -->
         <div class="register-left">
-          <div class="card start-card-compact">
+
+          <!-- Bloque de contacto y control de llamada -->
+          <div class="card start-card-compact" id="leftCallCard">
+
+            <!-- Ficha compacta del lead (solo si viene de Kommo) -->
+            <div class="lead-mini-card hidden" id="leadMiniCard">
+              <div class="lead-mini-header">
+                <span class="lead-mini-title">Lead vinculado</span>
+                <button class="btn-toggle-mini" id="btnToggleLeadMini" type="button" title="Mostrar/ocultar ficha">−</button>
+              </div>
+              <div class="lead-mini-content" id="leadMiniContent">
+                <div class="mini-field">
+                  <span class="mini-label">Programa</span>
+                  <strong id="lcmPrograma">—</strong>
+                </div>
+                <div class="mini-field">
+                  <span class="mini-label">Situación</span>
+                  <span id="lcmSituacion">—</span>
+                </div>
+                <div class="mini-notes" id="lcmNotasWrap">
+                  <span class="mini-label">Comentarios</span>
+                  <div id="lcmNotas"></div>
+                </div>
+                <div class="mini-loading hidden" id="lcmLoading">
+                  <span class="spinner"></span>
+                  <span>Cargando datos del lead…</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Input contacto + tipo -->
             <label class="field">
               <span class="field-label">Contacto</span>
               <input type="tel" id="inputContacto"
@@ -226,12 +255,16 @@
               </select>
             </label>
 
+            <!-- Botones principales -->
             <button class="btn btn-primary btn-lg btn-block" id="btnIniciar" disabled>
               <span class="btn-dot"></span>
               Iniciar llamada
             </button>
+            <button class="btn btn-secondary btn-block" id="btnCancelarLlamada" type="button" style="margin-top: 8px;">
+              Cancelar llamada
+            </button>
 
-            <!-- Timer compacto cuando está llamando -->
+            <!-- Timer y estado de la llamada -->
             <div class="call-timer-box hidden" id="callTimerBox">
               <div class="call-timer-row">
                 <span class="call-timer-label">⏱ Duración</span>
@@ -242,181 +275,46 @@
                 <span class="call-timer-value mono" id="dispHoraInicio">—</span>
               </div>
               <div class="call-timer-row hidden" id="dispHoraRespBox">
-                <span class="call-timer-label">Respondió</span>
+                <span class="call-timer-label">Contestó</span>
                 <span class="call-timer-value mono" id="dispHoraResp">—</span>
               </div>
             </div>
 
-            <!-- Acciones iniciales: contestó / no contestó -->
-            <div class="call-actions-vertical hidden" id="callingActions1">
-              <button class="btn btn-success btn-block" id="btnRespondio" type="button">
+            <!-- Botones durante la llamada -->
+            <div class="hidden call-actions-vertical" id="callPhase2Actions" style="margin-top: 12px;">
+              <button class="btn btn-success btn-block btn-lg" id="btnRespondio" type="button">
                 ✓ Sí contestó
               </button>
-              <button class="btn btn-danger btn-block" id="btnNoRespondio" type="button">
+              <button class="btn btn-danger btn-block btn-lg" id="btnNoRespondio" type="button">
                 ✕ No contestó
               </button>
             </div>
 
-            <!-- Acción cuando ya respondió -->
-            <div class="hidden" id="callingActions2">
-              <button class="btn btn-primary btn-block" id="btnFinLlamada" type="button">
-                ⏺ Finalizar llamada
+            <div class="hidden" id="callPhase3Actions" style="margin-top: 12px;">
+              <button class="btn btn-primary btn-block btn-lg" id="btnFinInteraccion" type="button">
+                ⏹ Fin de la interacción
               </button>
             </div>
           </div>
         </div>
 
         <!-- ============================================ -->
-        <!-- COLUMNA DERECHA: ficha Kommo / formulario      -->
+        <!-- COLUMNA DERECHA — FORMULARIO SIEMPRE VISIBLE -->
         <!-- ============================================ -->
         <div class="register-right">
+          <div class="card form-card" id="liveForm">
 
-          <!-- Estado 1: SIN lead vinculado (mensaje guía) -->
-          <div class="card empty-lead-card" id="emptyLeadCard">
-            <div class="empty-icon">👤</div>
-            <h3>Sin lead vinculado</h3>
-            <p class="muted">
-              Para ver la ficha del lead aquí, ve a "Llamadas pendientes"
-              y presiona el botón <strong>📞 Llamar</strong> sobre cualquier lead.
-            </p>
-            <p class="muted">
-              También puedes escribir un número manualmente a la izquierda
-              y presionar "Iniciar llamada" si no está en Kommo.
-            </p>
-          </div>
-
-          <!-- Estado 2: CON lead vinculado (ficha) -->
-          <div class="card hidden lead-card" id="leadCard">
-            <div class="lead-card-header">
-              <h3 class="lead-card-title" id="lcName">—</h3>
-              <button class="btn btn-ghost btn-sm" type="button" id="btnLimpiarLead">✕ Quitar</button>
-            </div>
-
-            <div class="lead-card-grid">
-              <div class="lead-field">
-                <span class="lead-field-label">Código</span>
-                <span class="lead-field-value mono" id="lcCodigo">—</span>
-              </div>
-              <div class="lead-field">
-                <span class="lead-field-label">Programa</span>
-                <span class="lead-field-value" id="lcPrograma">—</span>
-              </div>
-              <div class="lead-field">
-                <span class="lead-field-label">Situación</span>
-                <span class="lead-field-value" id="lcSituacion">—</span>
-              </div>
-              <div class="lead-field">
-                <span class="lead-field-label">Embudo</span>
-                <span class="lead-field-value" id="lcEmbudo">—</span>
-              </div>
-              <div class="lead-field">
-                <span class="lead-field-label">Universidad</span>
-                <span class="lead-field-value" id="lcUniversidad">—</span>
-              </div>
-              <div class="lead-field">
-                <span class="lead-field-label">Carrera</span>
-                <span class="lead-field-value" id="lcCarrera">—</span>
-              </div>
-              <div class="lead-field">
-                <span class="lead-field-label">Ciclo</span>
-                <span class="lead-field-value" id="lcCiclo">—</span>
-              </div>
-              <div class="lead-field">
-                <span class="lead-field-label">Distrito</span>
-                <span class="lead-field-value" id="lcDistrito">—</span>
-              </div>
-              <div class="lead-field">
-                <span class="lead-field-label">Presupuesto</span>
-                <span class="lead-field-value" id="lcPresupuesto">—</span>
-              </div>
-              <div class="lead-field">
-                <span class="lead-field-label">Descuento otorgado</span>
-                <span class="lead-field-value" id="lcDescuento">—</span>
-              </div>
-              <div class="lead-field full">
-                <span class="lead-field-label">Comentarios del cierre</span>
-                <span class="lead-field-value" id="lcCierre">—</span>
-              </div>
-              <div class="lead-field full">
-                <span class="lead-field-label">Objeciones</span>
-                <span class="lead-field-value" id="lcObjeciones">—</span>
-              </div>
-              <div class="lead-field full">
-                <span class="lead-field-label">Ex-entrenado</span>
-                <span class="lead-field-value" id="lcExEntrenado">—</span>
-              </div>
-            </div>
-
-            <div class="lead-notes" id="lcNotasWrap">
-              <h4 class="lead-notes-title">📝 Comentarios de Kommo</h4>
-              <div id="lcNotas"></div>
-            </div>
-          </div>
-
-          <!-- Estado 3: Cargando ficha -->
-          <div class="card hidden loading-card" id="leadLoading">
-            <span class="spinner"></span>
-            <p>Cargando datos del lead…</p>
-          </div>
-
-          <!-- Estado "Próximamente" (cobranza) -->
-          <div class="card hidden soon-card" id="soonCard">
-            <div class="soon-icon">🚧</div>
-            <h3 id="soonTitle">Próximamente</h3>
-            <p class="soon-text">Este tipo de llamada se gestionará más adelante.</p>
-            <button class="btn btn-primary" id="btnVolverInicio" type="button">
-              ← Volver al inicio
-            </button>
-          </div>
-
-          <!-- ============================================ -->
-          <!-- FORMULARIO: lado SÍ CONTESTÓ                  -->
-          <!-- ============================================ -->
-          <div class="card form-card hidden" id="liveForm">
-            <h3 class="form-title">📝 Datos de la llamada</h3>
-
-            <div class="section-divider"><span>Resultado de la llamada</span></div>
+            <!-- ========== INFORMACIÓN DEL LEAD ========== -->
+            <div class="section-divider"><span>Información del lead</span></div>
 
             <label class="field">
-              <span class="field-label">¿Contestó? <small class="muted">(habló más de 1 minuto)</small></span>
-              <div class="chip-group" id="contestoGroup" data-name="contesto">
-                <button type="button" class="chip" data-value="Sí">Sí</button>
-                <button type="button" class="chip" data-value="No">No</button>
-              </div>
+              <span class="field-label">Nombre</span>
+              <input type="text" id="nombreLead" placeholder="Nombre del lead" />
             </label>
 
             <label class="field">
-              <span class="field-label">Calidad del lead</span>
-              <div class="chip-group" id="calidadGroup" data-name="calidad">
-                <button type="button" class="chip" data-value="Caliente">🔥 Caliente</button>
-                <button type="button" class="chip" data-value="Tibio">🌡 Tibio</button>
-                <button type="button" class="chip" data-value="Frío">❄ Frío</button>
-              </div>
-            </label>
-
-            <label class="field">
-              <span class="field-label">¿Mostró interés?</span>
-              <div class="chip-group" id="interesGroup" data-name="interes">
-                <button type="button" class="chip" data-value="Sí">Sí</button>
-                <button type="button" class="chip" data-value="No">No</button>
-              </div>
-            </label>
-
-            <label class="field hidden" id="motivoNoInteresWrap">
-              <span class="field-label">Motivo de no interés</span>
-              <select id="motivoNoInteres">
-                <option value="">Seleccionar…</option>
-                <option value="Precio">Precio</option>
-                <option value="Horario">Horario</option>
-                <option value="Modalidad">Modalidad</option>
-                <option value="No es el momento">No es el momento</option>
-                <option value="Ya tomó el curso">Ya tomó el curso</option>
-                <option value="Otros">Otros</option>
-              </select>
-            </label>
-            <label class="field hidden" id="motivoOtrosWrap">
-              <span class="field-label">Especificar motivo</span>
-              <input type="text" id="motivoNoInteresOtros" placeholder="Escribe el motivo…" />
+              <span class="field-label">Programa de interés</span>
+              <input type="text" id="programaInteres" placeholder="Ej. TCI, GAC I..." />
             </label>
 
             <div class="form-grid-2">
@@ -426,55 +324,150 @@
               </label>
               <label class="field">
                 <span class="field-label">Carrera</span>
-                <input type="text" id="carrera" placeholder="Ej. Ing. Industrial" />
+                <select id="carrera">
+                  <option value="">Seleccionar…</option>
+                  <option>Negocios Internacionales</option>
+                  <option>Administración</option>
+                  <option>Ing. Industrial</option>
+                  <option>Adm. Logística</option>
+                  <option>Adm. Industrial</option>
+                  <option>Otra carrera afín</option>
+                  <option>No tiene carrera</option>
+                  <option>No segmento carrera</option>
+                </select>
               </label>
+            </div>
+
+            <div class="form-grid-2">
               <label class="field">
                 <span class="field-label">Ciclo</span>
-                <input type="text" id="ciclo" placeholder="Ej. 5to" />
+                <select id="ciclo">
+                  <option value="">Seleccionar…</option>
+                  <option>1</option><option>2</option><option>3</option>
+                  <option>4</option><option>5</option><option>6</option>
+                  <option>7</option><option>8</option><option>9</option>
+                  <option>10</option>
+                  <option>Bachiller</option>
+                  <option>Egresado</option>
+                </select>
               </label>
               <label class="field">
-                <span class="field-label">Distrito</span>
-                <input type="text" id="provincia" placeholder="Ej. Lima" />
-              </label>
-              <label class="field">
-                <span class="field-label">Edad</span>
-                <input type="number" id="edad" min="14" max="100" placeholder="Ej. 22" />
-              </label>
-              <label class="field check-field">
-                <input type="checkbox" id="demoCheck" />
-                <span>¿Se le ofreció una <strong>demo</strong>?</span>
+                <span class="field-label">Provincia</span>
+                <div class="chip-group" id="provinciaGroup" data-name="provincia">
+                  <button type="button" class="chip" data-value="Sí">Sí</button>
+                  <button type="button" class="chip" data-value="No">No</button>
+                </div>
               </label>
             </div>
 
-            <div class="section-divider"><span>Seguimiento</span></div>
-
-            <label class="field toggle-field">
-              <span>¿Llamar luego?</span>
-              <input type="checkbox" id="llamarLuegoYes" />
+            <label class="field">
+              <span class="field-label">Edad</span>
+              <div class="chip-group" id="edadGroup" data-name="edad">
+                <button type="button" class="chip" data-value="Sí">Sí</button>
+                <button type="button" class="chip" data-value="No">No</button>
+              </div>
             </label>
 
-            <div class="datetime-row hidden" id="proxContactoYesWrap">
+            <!-- ========== INTERÉS DEL LEAD ========== -->
+            <div class="section-divider"><span>Interés del lead</span></div>
+
+            <div class="form-grid-2">
+              <label class="field">
+                <span class="field-label">¿Hubo conversación?</span>
+                <div class="chip-group" id="conversacionGroup" data-name="conversacion">
+                  <button type="button" class="chip" data-value="Sí">Sí</button>
+                  <button type="button" class="chip" data-value="No">No</button>
+                </div>
+              </label>
+              <label class="field">
+                <span class="field-label">Calidad del lead</span>
+                <div class="chip-group" id="calidadGroup" data-name="calidad">
+                  <button type="button" class="chip" data-value="Caliente">🔥 Caliente</button>
+                  <button type="button" class="chip" data-value="Tibio">🌡 Tibio</button>
+                  <button type="button" class="chip" data-value="Frío">❄ Frío</button>
+                </div>
+              </label>
+            </div>
+
+            <div class="form-grid-2">
+              <label class="field">
+                <span class="field-label">¿Se le ofreció una demo?</span>
+                <div class="chip-group" id="demoGroup" data-name="demo">
+                  <button type="button" class="chip" data-value="Sí">Sí</button>
+                  <button type="button" class="chip" data-value="No">No</button>
+                </div>
+              </label>
+              <label class="field hidden" id="situacionDemoWrap">
+                <span class="field-label">Situación de la demo</span>
+                <select id="situacionDemo">
+                  <option value="">Seleccionar…</option>
+                  <option>Interesado</option>
+                  <option>Confirma asistencia</option>
+                  <option>No interesado</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="field hidden" id="fechaDemoWrap">
+              <span class="field-label">Fecha de la demo confirmada</span>
+              <input type="date" id="fechaDemoConfirmada" />
+            </label>
+
+            <div class="form-grid-2">
+              <label class="field">
+                <span class="field-label">¿Se le ofreció un descuento?</span>
+                <div class="chip-group" id="descuentoGroup" data-name="descuento">
+                  <button type="button" class="chip" data-value="Sí">Sí</button>
+                  <button type="button" class="chip" data-value="No">No</button>
+                </div>
+              </label>
+              <label class="field hidden" id="descuentoOfrecidoWrap">
+                <span class="field-label">% Descuento ofrecido</span>
+                <input type="number" id="descuentoOfrecido" min="1" max="100" placeholder="1-100" />
+              </label>
+            </div>
+
+            <label class="field">
+              <span class="field-label">¿Lead ganado? (solo falta pagar)</span>
+              <div class="chip-group" id="ventaGroup" data-name="venta">
+                <button type="button" class="chip" data-value="Sí">Sí</button>
+                <button type="button" class="chip" data-value="No">No</button>
+              </div>
+            </label>
+
+            <!-- ========== SEGUIMIENTO ========== -->
+            <div class="section-divider"><span>Seguimiento del lead</span></div>
+
+            <label class="field">
+              <span class="field-label">¿Llamar luego?</span>
+              <div class="chip-group" id="llamarLuegoGroup" data-name="llamarLuego">
+                <button type="button" class="chip" data-value="Sí">Sí</button>
+                <button type="button" class="chip" data-value="No">No</button>
+              </div>
+            </label>
+
+            <div class="datetime-row hidden" id="proxContactoWrap">
               <label class="field">
                 <span class="field-label">Fecha tentativa</span>
-                <input type="date" id="proxContactoYes" />
+                <input type="date" id="proxContacto" />
               </label>
               <div class="field">
                 <span class="field-label">Hora tentativa</span>
                 <div class="time-picker">
-                  <select id="proxHoraYesH" class="time-h">
+                  <select id="proxHoraH" class="time-h">
                     <option value="">HORA</option>
                     <option>1</option><option>2</option><option>3</option>
                     <option>4</option><option>5</option><option>6</option>
                     <option>7</option><option>8</option><option>9</option>
                     <option>10</option><option>11</option><option>12</option>
                   </select>
-                  <select id="proxHoraYesM" class="time-m">
+                  <select id="proxHoraM" class="time-m">
                     <option value="00">:00</option>
                     <option value="15">:15</option>
                     <option value="30">:30</option>
                     <option value="45">:45</option>
                   </select>
-                  <select id="proxHoraYesAP" class="time-ap">
+                  <select id="proxHoraAP" class="time-ap">
                     <option>a.m.</option>
                     <option selected>p.m.</option>
                   </select>
@@ -482,116 +475,36 @@
               </div>
             </div>
 
-            <label class="field" id="razonLlamadaWrapYes">
-              <span class="field-label" id="razonLlamadaLabelYes">
-                Razón
-              </span>
-              <select id="razonNuevaLlamadaYes">
+            <label class="field">
+              <span class="field-label">Razón de la llamada</span>
+              <select id="razonLlamada">
                 <option value="">Seleccionar…</option>
+                <option>Primera llamada</option>
+                <option>Seguimiento</option>
+                <option>Cobranza</option>
+                <option>Recuperación</option>
+                <option>Otro</option>
               </select>
             </label>
 
-            <label class="field hidden" id="razonOtrosWrapYes">
-              <span class="field-label">Especificar razón</span>
-              <input type="text" id="razonNuevaLlamadaOtrosYes" placeholder="Escribe la razón…" />
-            </label>
-
+            <!-- ========== OBSERVACIONES ========== -->
             <div class="section-divider"><span>Observaciones</span></div>
 
             <label class="field">
-              <span class="field-label">Observación</span>
-              <textarea id="Nota" rows="3" placeholder="Notas adicionales de la llamada…"></textarea>
+              <span class="field-label">Nota</span>
+              <textarea id="nota" rows="3" placeholder="Notas de la llamada…"></textarea>
             </label>
 
+            <!-- Botón GUARDAR (única acción del formulario) -->
             <div class="actions-row">
-              <button class="btn btn-secondary" id="btnCancelarYes" type="button">Cancelar</button>
-              <button class="btn btn-primary btn-lg" id="btnGuardarYes" type="button">
-                💾 Guardar llamada
+              <button class="btn btn-primary btn-lg btn-block" id="btnGuardarLlamada" type="button">
+                💾 Guardar información
               </button>
             </div>
           </div>
+        </div>
 
-          <!-- ============================================ -->
-          <!-- FORMULARIO: lado NO CONTESTÓ                  -->
-          <!-- ============================================ -->
-          <div class="card form-card hidden" id="noAnswerPanel">
-            <h3 class="form-title">📵 No contestó</h3>
-
-            <label class="field">
-              <span class="field-label">Motivo</span>
-              <div class="chip-group" id="motivoNoGroup" data-name="motivoNo">
-                <button type="button" class="chip" data-value="Buzón">📦 Buzón de voz</button>
-                <button type="button" class="chip" data-value="No respondió">📵 No respondió</button>
-                <button type="button" class="chip" data-value="Cortó">⛔ Cortó</button>
-                <button type="button" class="chip" data-value="Otro">Otro</button>
-              </div>
-            </label>
-
-            <label class="field toggle-field">
-              <span>¿Volver a llamar?</span>
-              <input type="checkbox" id="volverLlamarNo" checked />
-            </label>
-
-            <div class="datetime-row" id="proxContactoNoWrap">
-              <label class="field">
-                <span class="field-label">Fecha tentativa</span>
-                <input type="date" id="proxContactoNo" />
-              </label>
-              <div class="field">
-                <span class="field-label">Hora tentativa</span>
-                <div class="time-picker">
-                  <select id="proxHoraNoH" class="time-h">
-                    <option value="">HORA</option>
-                    <option>1</option><option>2</option><option>3</option>
-                    <option>4</option><option>5</option><option>6</option>
-                    <option>7</option><option>8</option><option>9</option>
-                    <option>10</option><option>11</option><option>12</option>
-                  </select>
-                  <select id="proxHoraNoM" class="time-m">
-                    <option value="00">:00</option>
-                    <option value="15">:15</option>
-                    <option value="30">:30</option>
-                    <option value="45">:45</option>
-                  </select>
-                  <select id="proxHoraNoAP" class="time-ap">
-                    <option>a.m.</option>
-                    <option selected>p.m.</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <label class="field" id="razonLlamadaWrapNo">
-              <span class="field-label" id="razonLlamadaLabelNo">
-                Razón
-              </span>
-              <select id="razonNuevaLlamadaNo">
-                <option value="">Seleccionar…</option>
-              </select>
-            </label>
-
-            <label class="field hidden" id="razonOtrosWrapNo">
-              <span class="field-label">Especificar razón</span>
-              <input type="text" id="razonNuevaLlamadaOtrosNo" placeholder="Escribe la razón…" />
-            </label>
-
-            <div class="section-divider"><span>Observaciones</span></div>
-
-            <label class="field">
-              <span class="field-label">Observación</span>
-              <textarea id="NotaNo" rows="2" placeholder="Notas opcionales…"></textarea>
-            </label>
-
-            <div class="actions-row">
-              <button class="btn btn-secondary" id="btnCancelarNo" type="button">Cancelar</button>
-              <button class="btn btn-primary btn-lg" id="btnGuardarNo" type="button">
-                💾 Guardar
-              </button>
-            </div>
-          </div>
-
-        </div>  <!-- /register-right -->
-      </div>  <!-- /register-grid -->
+      </div>
     </section>
 
     <!-- ================================================ -->

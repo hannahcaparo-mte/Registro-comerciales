@@ -711,3 +711,141 @@ body { min-height: 100vh; }
   text-align: center;
   padding: 40px 24px;
 }
+
+/* ============================================================
+   FASES DE LA LLAMADA (nuevos elementos)
+   ============================================================ */
+.call-fixed-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #E5E9F2;
+  margin-bottom: 14px;
+}
+.call-fixed-label {
+  font-size: 12px;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.call-fixed-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1A2B4C;
+}
+
+.call-phase4-actions {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #E5E9F2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Botón "Quitar lead" arriba de la columna derecha */
+.quitar-lead-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+/* ============================================================
+   LEAD MINI CARD (rediseño 2026-07)
+   ============================================================ */
+.lead-mini-card {
+  background: linear-gradient(135deg, #FFF8E1 0%, #E8F0FE 100%);
+  border: 1px solid #A6C5F7;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.lead-mini-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.lead-mini-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4A5568;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.btn-toggle-mini {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #A6C5F7;
+  background: #FFF;
+  color: #1A73E8;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s ease;
+}
+.btn-toggle-mini:hover {
+  background: #E8F0FE;
+  transform: scale(1.05);
+}
+
+.lead-mini-content { display: block; }
+.lead-mini-content.collapsed { display: none; }
+
+.mini-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+}
+.mini-label {
+  font-size: 11px;
+  color: #6B7383;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.mini-field strong,
+.mini-field span:not(.mini-label) {
+  font-size: 14px;
+  color: #1A2B4C;
+}
+
+.mini-notes {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(166, 197, 247, 0.5);
+}
+.mini-notes .mini-label { margin-bottom: 6px; display: block; }
+
+.mini-notes .lead-note-item {
+  background: rgba(255,255,255,0.6);
+  border-left: 2px solid #1A73E8;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border-radius: 0 4px 4px 0;
+  font-size: 12px;
+}
+.mini-notes .lead-note-date {
+  font-size: 10px;
+  color: #9CA3AF;
+  margin-bottom: 2px;
+}
+.mini-notes .lead-note-text {
+  color: #4A5568;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.mini-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  color: #6B7383;
+  font-size: 13px;
+}
