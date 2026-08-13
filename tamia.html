@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Panel Administrador · Tamia</title>
+  <title>Registro Comercial · Tamia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="styles_tamia.css" />
 </head>
 <body>
 
@@ -16,167 +15,235 @@
   <header class="app-header">
     <div class="header-inner">
       <div class="brand">
-        <img src="LOGO.png" alt="Logo" class="brand-logo" onerror="this.style.display='none';" />
         <div class="brand-text">
-          <span class="brand-label">Administradora</span>
+          <span class="brand-label">Comercial</span>
           <h1 class="brand-name">Tamia</h1>
         </div>
       </div>
 
-      <div class="header-right">
-        <div class="datetime">
-          <div class="dt-block">
-            <span class="dt-label">Fecha de hoy</span>
-            <span class="dt-value" id="currentDate">—</span>
-          </div>
-          <div class="dt-divider"></div>
-          <div class="dt-block">
-            <span class="dt-label">Hora</span>
-            <span class="dt-value mono" id="currentTime">—</span>
-          </div>
+      <div class="datetime">
+        <div class="dt-block">
+          <span class="dt-label">Fecha</span>
+          <span class="dt-value" id="currentDate">—</span>
         </div>
+        <div class="dt-divider"></div>
+        <div class="dt-block">
+          <span class="dt-label">Hora</span>
+          <span class="dt-value mono" id="currentTime">—</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="stat-box">
+          <span class="stat-label">Hoy</span>
+          <span class="stat-value" id="statHoy">0</span>
+        </div>
+        <span class="sync-indicator sync-ok" id="syncStatus">
+          <span id="syncDot">●</span>
+          <span id="syncText">Sincronizado</span>
+        </span>
       </div>
     </div>
   </header>
 
-  <!-- ====== CONTENIDO ====== -->
+  <!-- ====== MAIN ====== -->
   <main class="app-main">
 
-    <div class="panel-head">
-      <h2 class="panel-title">Configuración de programas</h2>
-      <p class="panel-sub">
-        Elige qué programas están en campaña y quién tiene acceso a cada uno.
-        Los cambios pueden tardar hasta 1 minuto en aparecer para las comerciales.
-      </p>
-      <div class="tamia-actions-top">
-        <button class="btn btn-ghost" id="btnSincronizar" type="button">
-          🔄 Sincronizar con Kommo
-        </button>
-        <button class="btn btn-primary" id="btnGuardar" type="button" disabled>
-          💾 Guardar cambios
-        </button>
-      </div>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="register">📞 Registrar</button>
+      <button class="tab" data-tab="history">📋 Historial del día</button>
     </div>
 
-    <!-- Estado de carga -->
-    <div class="card" id="loadingCard">
-      <div class="empty-state">
-        <span class="spinner"></span>
-        <p>Cargando configuración…</p>
-      </div>
-    </div>
+    <!-- ====== PANEL REGISTRAR ====== -->
+    <section class="tab-panel active" id="panel-register">
 
-    <!-- Estado de error -->
-    <div class="card hidden" id="errorCard">
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <p id="errorMsg">Error al cargar</p>
-        <button class="btn btn-primary" id="btnReintentar" type="button">Reintentar</button>
-      </div>
-    </div>
-
-    <!-- Configuración -->
-    <div class="hidden" id="configWrap">
-
-      <!-- Toggle vista compacta / expandida -->
-      <div class="tamia-controls">
-        <div class="tamia-info">
-          <span class="badge-info" id="programasCount">— programas</span>
-          <span class="badge-info" id="enCampanaCount">— en campaña</span>
-        </div>
-        <div class="tamia-search">
-          <input type="text" id="filtroPrograma" placeholder="🔍 Buscar programa…" />
-        </div>
+      <div class="panel-head">
+        <h2 class="panel-title">Registrar nueva llamada</h2>
+        <p class="panel-sub">Al escribir el número, se toma la hora de inicio automáticamente.</p>
       </div>
 
-      <!-- Tabla de configuración -->
       <div class="card">
-        <div class="table-wrap">
-          <table class="tamia-table">
-            <thead>
-              <tr>
-                <th class="col-programa">Programa</th>
-                <th class="col-campana">En campaña</th>
-                <th class="col-comercial">
-                  <div class="comercial-avatar avatar-natalia">N</div>
-                  <div>Natalia</div>
-                </th>
-                <th class="col-comercial">
-                  <div class="comercial-avatar avatar-angela">A</div>
-                  <div>Angela</div>
-                </th>
-                <th class="col-comercial">
-                  <div class="comercial-avatar avatar-rosemary">R</div>
-                  <div>Rosemary</div>
-                </th>
-                <th class="col-comercial">
-                  <div class="comercial-avatar avatar-nirvana">N</div>
-                  <div>Nirvana</div>
-                </th>
-              </tr>
-            </thead>
-            <tbody id="configBody"></tbody>
-          </table>
+
+        <!-- Timer strip (arriba) -->
+        <div class="timer-strip">
+          <div class="timer-block">
+            <span class="timer-label">📅 Fecha</span>
+            <span class="timer-value" id="fldFecha">—</span>
+          </div>
+          <div class="timer-block">
+            <span class="timer-label">⏱ Inicio</span>
+            <span class="timer-value mono" id="fldHoraInicio">—</span>
+          </div>
+          <div class="timer-block">
+            <span class="timer-label">🏁 Fin (al guardar)</span>
+            <span class="timer-value mono" id="fldHoraFin">—</span>
+          </div>
         </div>
 
-        <div class="empty-state hidden" id="emptyFilter">
-          <p class="muted">Sin coincidencias.</p>
+        <!-- ================================
+             DATOS DE LA LLAMADA
+             ================================ -->
+
+        <div class="field-row-2">
+          <label class="field">
+            <span class="field-label">Celular</span>
+            <input type="tel" id="celular" placeholder="Ej. 51987654321"
+                   inputmode="numeric" maxlength="11" autocomplete="off" />
+            <span class="field-hint">11 dígitos (empieza cuando escribes)</span>
+          </label>
         </div>
+
+        <!-- ================================
+             SECCIONES DEL FORMULARIO
+             ================================ -->
+
+        <div class="section-divider"><span>Fuente</span></div>
+        <div class="chip-group" id="fuenteGroup" data-name="fuente">
+          <button type="button" class="chip" data-value="WSP">WSP</button>
+          <button type="button" class="chip" data-value="FORM">FORM</button>
+          <button type="button" class="chip" data-value="EXLEADS">EXLEADS</button>
+          <button type="button" class="chip" data-value="EXENTRENADOS">EXENTRENADOS</button>
+          <button type="button" class="chip" data-value="ORGANICOS">ORGANICOS</button>
+        </div>
+
+        <div class="section-divider"><span>Programa</span></div>
+        <div class="chip-group chip-grid" id="programaGroup" data-name="programa">
+          <button type="button" class="chip" data-value="GAC I">GAC I</button>
+          <button type="button" class="chip" data-value="GAC II">GAC II</button>
+          <button type="button" class="chip" data-value="GTD">GTD</button>
+          <button type="button" class="chip" data-value="ACE">ACE</button>
+          <button type="button" class="chip" data-value="CGI">CGI</button>
+          <button type="button" class="chip" data-value="GEIMP">GEIMP</button>
+          <button type="button" class="chip" data-value="CIRCUITO">CIRCUITO</button>
+          <button type="button" class="chip" data-value="LAB SUPPLY">LAB SUPPLY</button>
+          <button type="button" class="chip" data-value="DEMO COMEX">DEMO COMEX</button>
+          <button type="button" class="chip" data-value="OCI">OCI</button>
+          <button type="button" class="chip" data-value="GOL">GOL</button>
+          <button type="button" class="chip" data-value="LEAN LOGISTICS">LEAN LOGISTICS</button>
+          <button type="button" class="chip" data-value="TCI">TCI</button>
+          <button type="button" class="chip" data-value="PGA">PGA</button>
+          <button type="button" class="chip" data-value="COMPRAS">COMPRAS</button>
+          <button type="button" class="chip" data-value="SDA">SDA</button>
+        </div>
+
+        <div class="section-divider"><span>Resultado de la llamada</span></div>
+
+        <div class="field-row-2">
+          <div class="field">
+            <span class="field-label">¿Contestó?</span>
+            <div class="chip-group" id="contestoGroup" data-name="contesto">
+              <button type="button" class="chip" data-value="SI">SÍ</button>
+              <button type="button" class="chip" data-value="NO">NO</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label">¿Hubo conversación?</span>
+            <div class="chip-group" id="conversacionGroup" data-name="conversacion">
+              <button type="button" class="chip" data-value="SI">SÍ</button>
+              <button type="button" class="chip" data-value="NO">NO</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label">Calidad del lead</span>
+          <div class="chip-group" id="calidadGroup" data-name="calidad">
+            <button type="button" class="chip" data-value="CALIENTE">🔥 CALIENTE</button>
+            <button type="button" class="chip" data-value="TIBIO">🌡 TIBIO</button>
+            <button type="button" class="chip" data-value="FRIO">❄ FRÍO</button>
+          </div>
+        </div>
+
+        <label class="toggle-field">
+          <input type="checkbox" id="llamarLuego" />
+          <span>📅 Llamar luego</span>
+        </label>
+
+        <div class="section-divider"><span>Datos del lead</span></div>
+
+        <div class="field">
+          <span class="field-label">Carrera</span>
+          <div class="chip-group chip-grid" id="carreraGroup" data-name="carrera">
+            <button type="button" class="chip" data-value="Administración">Administración</button>
+            <button type="button" class="chip" data-value="Negocios Int">Negocios Int</button>
+            <button type="button" class="chip" data-value="Ing. Industrial">Ing. Industrial</button>
+            <button type="button" class="chip" data-value="Adm. Logistica">Adm. Logística</button>
+            <button type="button" class="chip" data-value="Adm. Industrial">Adm. Industrial</button>
+            <button type="button" class="chip" data-value="Otra carrera afin">Otra carrera afín</button>
+            <button type="button" class="chip" data-value="No tiene carrera">No tiene carrera</button>
+            <button type="button" class="chip" data-value="No segmento carrera">No segmento carrera</button>
+          </div>
+        </div>
+
+        <div class="field-row-2">
+          <div class="field">
+            <span class="field-label">Provincia</span>
+            <div class="chip-group" id="provinciaGroup" data-name="provincia">
+              <button type="button" class="chip" data-value="SI">SÍ</button>
+              <button type="button" class="chip" data-value="NO">NO</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label">Edad</span>
+            <div class="chip-group" id="edadGroup" data-name="edad">
+              <button type="button" class="chip" data-value="SI">SÍ</button>
+              <button type="button" class="chip" data-value="NO">NO</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-divider"><span>Observaciones</span></div>
+
+        <label class="field">
+          <span class="field-label">Nota</span>
+          <textarea id="nota" rows="3" placeholder="Notas adicionales de la llamada…"></textarea>
+        </label>
+
+        <!-- ================================
+             ACCIONES
+             ================================ -->
+        <div class="actions-row">
+          <button class="btn btn-secondary" id="btnLimpiar" type="button">🗑 Limpiar</button>
+          <button class="btn btn-primary btn-lg" id="btnGuardar" type="button" style="margin-left: auto;">
+            💾 Guardar llamada
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ====== PANEL HISTORIAL ====== -->
+    <section class="tab-panel" id="panel-history">
+      <div class="panel-head">
+        <h2 class="panel-title">Historial del día</h2>
+        <p class="panel-sub">Llamadas registradas hoy en este navegador.</p>
       </div>
 
-      <!-- Acciones bulk -->
-      <div class="card bulk-actions-card">
-        <h3 class="card-title">Acciones rápidas</h3>
-        <div class="bulk-actions-row">
-          <button class="btn btn-secondary btn-sm" data-bulk="allCampana">
-            ✓ Marcar todos "En campaña"
-          </button>
-          <button class="btn btn-secondary btn-sm" data-bulk="noneCampana">
-            ✕ Desmarcar todos "En campaña"
-          </button>
+      <div class="card">
+        <div id="historyEmpty" class="history-empty">
+          <p>Sin llamadas registradas hoy todavía.</p>
         </div>
-        <div class="bulk-actions-row">
-          <button class="btn btn-secondary btn-sm" data-bulk="allNatalia">
-            + Todo a Natalia
-          </button>
-          <button class="btn btn-secondary btn-sm" data-bulk="noneNatalia">
-            − Nada a Natalia
-          </button>
-          <button class="btn btn-secondary btn-sm" data-bulk="allAngela">
-            + Todo a Angela
-          </button>
-          <button class="btn btn-secondary btn-sm" data-bulk="noneAngela">
-            − Nada a Angela
-          </button>
-          <button class="btn btn-secondary btn-sm" data-bulk="allRosemary">
-            + Todo a Rosemary
-          </button>
-          <button class="btn btn-secondary btn-sm" data-bulk="noneRosemary">
-            − Nada a Rosemary
-          </button>
-          <button class="btn btn-secondary btn-sm" data-bulk="allNirvana">
-            + Todo a Nirvana
-          </button>
-          <button class="btn btn-secondary btn-sm" data-bulk="noneNirvana">
-            − Nada a Nirvana
-          </button>
-        </div>
+        <table class="history-table hidden" id="historyTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Hora</th>
+              <th>Celular</th>
+              <th>Programa</th>
+              <th>Contestó</th>
+              <th>Calidad</th>
+              <th>Nota</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
       </div>
-
-    </div>
+    </section>
 
   </main>
 
-  <!-- Barra fija de guardar -->
-  <div class="save-bar hidden" id="saveBar">
-    <span class="save-msg">Tienes cambios sin guardar</span>
-    <div class="save-actions">
-      <button class="btn btn-secondary" id="btnDescartar" type="button">Descartar</button>
-      <button class="btn btn-primary" id="btnGuardarBottom" type="button">💾 Guardar cambios</button>
-    </div>
-  </div>
-
-  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <script src="script_tamia.js"></script>
