@@ -544,3 +544,123 @@ body {
   color: #9CA3AF;
   font-size: 12px;
 }
+
+/* ============================================================
+   LOGO
+   ============================================================ */
+.brand-logo {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ============================================================
+   META DEL DÍA (goal tracker)
+   ============================================================ */
+.goal-tracker {
+  background: linear-gradient(135deg, #FFF8E1 0%, #FEF3C7 100%);
+  border: 1px solid #F9AB00;
+  border-radius: 10px;
+  padding: 8px 14px;
+  min-width: 180px;
+}
+.goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+.goal-label {
+  font-size: 10px;
+  color: #78350F;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 600;
+}
+.goal-numbers {
+  font-size: 14px;
+  color: #78350F;
+  font-weight: 500;
+}
+.goal-numbers strong {
+  font-size: 18px;
+  color: #B45309;
+  font-weight: 700;
+}
+.goal-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(180, 83, 9, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.goal-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #F9AB00 0%, #B45309 100%);
+  border-radius: 999px;
+  transition: width .4s ease;
+  width: 0%;
+}
+
+/* ============================================================
+   CALLING BOX (mientras está la llamada activa o registrando)
+   ============================================================ */
+.calling-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, #E8F0FE 0%, #D6F1E1 100%);
+  border: 1px solid #A6C5F7;
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+.calling-box.calling-box-done {
+  background: linear-gradient(135deg, #D6F1E1 0%, #A9E4C1 100%);
+  border-color: #1B9E5A;
+}
+.calling-icon {
+  font-size: 28px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.calling-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.calling-label {
+  font-size: 11px;
+  color: #4A5568;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 600;
+}
+.calling-text strong {
+  font-size: 20px;
+  color: #1A2B4C;
+  font-weight: 600;
+}
+
+/* Selects styling */
+.field select {
+  padding: 10px 12px;
+  border: 1px solid #DADCE0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1A2B4C;
+  background: #FFFFFF;
+  cursor: pointer;
+}
+.field select:focus {
+  outline: 0;
+  border-color: #1A73E8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+}

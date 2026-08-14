@@ -1,0 +1,207 @@
+/* ============================================================
+   STYLES_TAMIA.CSS — Estilos específicos del panel de admin
+   ============================================================ */
+
+.tamia-actions-top {
+  display: flex;
+  gap: 8px;
+}
+
+.tamia-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.tamia-info {
+  display: flex;
+  gap: 8px;
+}
+
+.badge-info {
+  background: #E8F0FE;
+  color: #0D5BCB;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tamia-search input {
+  padding: 8px 14px;
+  border: 1px solid #DADCE0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  min-width: 240px;
+  background: #FFFFFF;
+}
+.tamia-search input:focus {
+  outline: 0;
+  border-color: #1A73E8;
+}
+
+/* ============================================================
+   TABLA DE CONFIGURACIÓN
+   ============================================================ */
+.tamia-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tamia-table thead th {
+  padding: 12px 8px;
+  text-align: center;
+  background: #F8F9FB;
+  border-bottom: 2px solid #E5E9F2;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: #6B7383;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.tamia-table th.col-programa {
+  text-align: left;
+  padding-left: 16px;
+  min-width: 180px;
+}
+
+.tamia-table th.col-campana {
+  min-width: 100px;
+}
+
+.tamia-table th.col-comercial {
+  min-width: 90px;
+}
+
+.tamia-table th.col-comercial div:not(.comercial-avatar) {
+  font-size: 12px;
+  color: #4A5568;
+  text-transform: none;
+  margin-top: 4px;
+}
+
+.tamia-table tbody tr {
+  border-bottom: 1px solid #F0F2F5;
+  transition: background .15s ease;
+}
+.tamia-table tbody tr:hover {
+  background: #FAFBFC;
+}
+.tamia-table tbody tr.disabled-row {
+  opacity: 0.4;
+}
+.tamia-table tbody tr.disabled-row td {
+  color: #9CA3AF;
+}
+.tamia-table tbody tr.dirty {
+  background: #FFF8E1;
+}
+.tamia-table tbody tr.dirty:hover {
+  background: #FFF3B0;
+}
+
+.tamia-table tbody td {
+  padding: 8px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.tamia-table tbody td.programa-cell {
+  text-align: left;
+  padding-left: 16px;
+  font-weight: 500;
+  color: #1A2B4C;
+}
+
+/* Checkboxes grandes */
+.tamia-check {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  accent-color: #1A73E8;
+}
+.tamia-check.campana-check {
+  accent-color: #1B9E5A;
+}
+
+/* Comercial avatars en headers */
+.comercial-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 auto;
+}
+.avatar-natalia  { background: #1B9E5A; }
+.avatar-angela   { background: #1A73E8; }
+.avatar-rosemary { background: #E37400; }
+.avatar-nirvana  { background: #8E44AD; }
+
+/* ============================================================
+   BULK ACTIONS
+   ============================================================ */
+.bulk-actions-card {
+  margin-top: 16px;
+}
+.bulk-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.bulk-actions-row:last-child {
+  margin-bottom: 0;
+}
+
+/* ============================================================
+   BARRA FIJA DE GUARDAR
+   ============================================================ */
+.save-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1A2B4C;
+  color: #FFFFFF;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 -4px 20px rgba(20, 30, 70, 0.15);
+  z-index: 100;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.save-msg {
+  font-weight: 500;
+}
+.save-actions {
+  display: flex;
+  gap: 8px;
+}
+.save-bar .btn-secondary {
+  background: rgba(255,255,255,0.1);
+  color: #FFFFFF;
+}
+.save-bar .btn-secondary:hover {
+  background: rgba(255,255,255,0.2);
+}

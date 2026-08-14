@@ -1,19 +1,22 @@
 /* ============================================================
    REGISTRO COMERCIAL · ROSEMARY
-   Versión simple: solo registrar llamadas + historial local
+   Flujo: Celular → Llamando → Fin interacción → Formulario
    ============================================================ */
 
 const COMERCIAL = "ROSEMARY";
 const STORAGE_KEY = "reg_rosemary_v5";
 const PENDING_KEY = "reg_rosemary_v5_pending";
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyq45K8T5C3ORJFJW0l1w_uZSPOlTwXBlHf9Jco0Axxe-MJXgH4E40nA6cMl5IjsdpR/exec";  // ← reemplazar tras deploy
+const SHEETS_WEBAPP_URL = "PONER_URL_AQUI";
+
+// META personalizable por comercial: default 50 lun-vie, 25 sábado
+const META_LUN_VIE = 50;
+const META_SABADO  = 25;
 
 /* ============================================================
    ESTADO
    ============================================================ */
 let historial = [];
-let pendientes = [];  // cola de registros pendientes de sincronizar
-let horaInicioActual = null;
+let pendientes = [];
 
 const callState = {
   celular: "",
@@ -27,9 +30,9 @@ const callState = {
   provincia: "",
   edad: "",
   nota: "",
-  horaInicio: "",
-  horaFin: "",
-  fecha: "",
+  horaInicio: "",   // se toma al apretar "Llamando"
+  horaFin: "",      // se toma al apretar "Fin de interacción"
+  fecha: "",        // se toma al apretar "Llamando"
 };
 
 /* ============================================================
@@ -43,6 +46,22 @@ function nowDateBonita() {
 function nowDateISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/* ============================================================
+   META DEL DÍA
+   ============================================================ */
+function getMetaDelDia() {
+  const d = new Date();
+  return d.getDay() === 6 ? META_SABADO : META_LUN_VIE;
+}
+function actualizarMeta() {
+  const hoy = historial.length;
+  const meta = getMetaDelDia();
+  document.getElementById("goalCurrent").textContent = hoy;
+  document.getElementById("goalTotal").textContent = meta;
+  const pct = Math.min(100, (hoy / meta) * 100);
+  document.getElementById("goalBarFill").style.width = pct + "%";
 }
 
 /* ============================================================
@@ -75,7 +94,6 @@ function loadHistorialLocal() {
     if (!raw) return;
     const d = JSON.parse(raw);
     if (d.fecha !== nowDateISO()) {
-      // Nuevo día: limpiar historial de ayer
       localStorage.removeItem(STORAGE_KEY);
       historial = [];
     } else {
@@ -85,9 +103,8 @@ function loadHistorialLocal() {
 }
 
 function savePendientesLocal() {
-  try {
-    localStorage.setItem(PENDING_KEY, JSON.stringify(pendientes));
-  } catch (e) { console.warn(e); }
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify(pendientes)); }
+  catch (e) { console.warn(e); }
 }
 function loadPendientesLocal() {
   try {
@@ -106,12 +123,10 @@ function showToast(msg, err = false) {
   t.classList.add("visible");
   setTimeout(() => t.classList.remove("visible"), 3000);
 }
-
 function escapeHtml(s) {
   if (s == null) return "";
-  return String(s)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 /* ============================================================
@@ -119,16 +134,16 @@ function escapeHtml(s) {
    ============================================================ */
 document.querySelectorAll(".tab").forEach(t => {
   t.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === t));
+    document.querySelectorAll(".tab").forEach(x =>
+      x.classList.toggle("active", x === t));
     document.querySelectorAll(".tab-panel").forEach(p =>
-      p.classList.toggle("active", p.id === `panel-${t.dataset.tab}`)
-    );
+      p.classList.toggle("active", p.id === `panel-${t.dataset.tab}`));
     if (t.dataset.tab === "history") renderHistorial();
   });
 });
 
 /* ============================================================
-   CHIP GROUPS (selección única)
+   CHIPS
    ============================================================ */
 function setupChipGroup(groupId, onSelect) {
   const g = document.getElementById(groupId);
@@ -136,7 +151,6 @@ function setupChipGroup(groupId, onSelect) {
   g.addEventListener("click", (e) => {
     const chip = e.target.closest(".chip");
     if (!chip) return;
-    // Toggle: si estaba seleccionado, deseleccionar
     if (chip.classList.contains("selected")) {
       chip.classList.remove("selected");
       onSelect("");
@@ -147,81 +161,81 @@ function setupChipGroup(groupId, onSelect) {
     }
   });
 }
-
-setupChipGroup("fuenteGroup",       v => callState.fuente = v);
-setupChipGroup("programaGroup",     v => callState.programa = v);
 setupChipGroup("contestoGroup",     v => callState.contesto = v);
-setupChipGroup("calidadGroup",      v => callState.calidad = v);
 setupChipGroup("conversacionGroup", v => callState.conversacion = v);
-setupChipGroup("carreraGroup",      v => callState.carrera = v);
+setupChipGroup("calidadGroup",      v => callState.calidad = v);
 setupChipGroup("provinciaGroup",    v => callState.provincia = v);
 setupChipGroup("edadGroup",         v => callState.edad = v);
 
-document.getElementById("llamarLuego").addEventListener("change", (e) => {
-  callState.llamarLuego = e.target.checked;
-});
+// Selects
+document.getElementById("fuente").addEventListener("change",  e => callState.fuente = e.target.value);
+document.getElementById("programa").addEventListener("change", e => callState.programa = e.target.value);
+document.getElementById("carrera").addEventListener("change",  e => callState.carrera = e.target.value);
+document.getElementById("llamarLuego").addEventListener("change", e => callState.llamarLuego = e.target.checked);
 
 /* ============================================================
-   CELULAR: al empezar a escribir, tomar hora de inicio
+   CELULAR: validación
    ============================================================ */
 const celularInput = document.getElementById("celular");
+const btnLlamando = document.getElementById("btnLlamando");
 celularInput.addEventListener("input", (e) => {
-  // Solo dígitos
   e.target.value = e.target.value.replace(/\D/g, "").slice(0, 11);
-  callState.celular = e.target.value;
-
-  // Marcar hora de inicio la PRIMERA vez que se escribe algo
-  if (e.target.value.length >= 1 && !horaInicioActual) {
-    horaInicioActual = nowTime();
-    callState.horaInicio = horaInicioActual;
-    callState.fecha = nowDateBonita();
-    document.getElementById("fldHoraInicio").textContent = horaInicioActual;
-    document.getElementById("fldFecha").textContent = callState.fecha;
-  }
+  btnLlamando.disabled = e.target.value.length !== 11;
 });
 
 /* ============================================================
-   LIMPIAR FORMULARIO
+   FASES DE LA LLAMADA
    ============================================================ */
-function limpiarFormulario() {
-  Object.keys(callState).forEach(k => {
-    if (typeof callState[k] === "boolean") callState[k] = false;
-    else callState[k] = "";
-  });
-  horaInicioActual = null;
-
-  document.querySelectorAll("#panel-register .chip.selected").forEach(c => c.classList.remove("selected"));
-  document.getElementById("celular").value = "";
-  document.getElementById("nota").value = "";
-  document.getElementById("llamarLuego").checked = false;
-  document.getElementById("fldFecha").textContent = "—";
-  document.getElementById("fldHoraInicio").textContent = "—";
-  document.getElementById("fldHoraFin").textContent = "—";
+function mostrarFase(n) {
+  document.getElementById("fase1").classList.toggle("hidden", n !== 1);
+  document.getElementById("fase2").classList.toggle("hidden", n !== 2);
+  document.getElementById("fase3").classList.toggle("hidden", n !== 3);
 }
 
-document.getElementById("btnLimpiar").addEventListener("click", () => {
-  if (confirm("¿Limpiar todos los campos?")) limpiarFormulario();
+// Fase 1 → 2: apretó "Llamando"
+btnLlamando.addEventListener("click", () => {
+  const cel = celularInput.value.trim();
+  if (cel.length !== 11) {
+    showToast("Celular debe tener 11 dígitos", true);
+    return;
+  }
+  callState.celular = cel;
+  callState.horaInicio = nowTime();
+  callState.fecha = nowDateBonita();
+
+  document.getElementById("celularEnLlamada").textContent = cel;
+  mostrarFase(2);
+});
+
+// Fase 2 → 1: cancelar durante llamada
+document.getElementById("btnCancelarLlamando").addEventListener("click", () => {
+  if (!confirm("¿Cancelar esta llamada?")) return;
+  resetTodo();
+});
+
+// Fase 2 → 3: apretó "Fin de interacción"
+document.getElementById("btnFinInteraccion").addEventListener("click", () => {
+  callState.horaFin = nowTime();
+  document.getElementById("celularEnForm").textContent = callState.celular;
+  mostrarFase(3);
+});
+
+// Fase 3 → cancelar (perder todo)
+document.getElementById("btnCancelarForm").addEventListener("click", () => {
+  if (!confirm("¿Cancelar? Se perderán los datos de esta llamada.")) return;
+  resetTodo();
 });
 
 /* ============================================================
    GUARDAR
    ============================================================ */
 document.getElementById("btnGuardar").addEventListener("click", () => {
-  // Validar mínimos
-  if (!callState.celular || callState.celular.length !== 11) {
-    showToast("Ingresa un celular de 11 dígitos", true);
-    document.getElementById("celular").focus();
-    return;
-  }
+  // Solo validación: contestó (mínimo)
   if (!callState.contesto) {
     showToast("Marca si contestó o no", true);
     return;
   }
 
-  callState.horaFin = nowTime();
-  document.getElementById("fldHoraFin").textContent = callState.horaFin;
-
-  // Armar registro con timestamp local (para deduplicar en el buffer)
   const registro = {
     _id: Date.now() + "-" + Math.random().toString(36).slice(2, 8),
     _fecha_iso: nowDateISO(),
@@ -236,28 +250,48 @@ document.getElementById("btnGuardar").addEventListener("click", () => {
     carrera: callState.carrera,
     provincia: callState.provincia,
     edad: callState.edad,
-    nota: callState.nota || document.getElementById("nota").value.trim(),
-    horaInicio: callState.horaInicio || nowTime(),
-    horaFin: callState.horaFin,
-    fecha: callState.fecha || nowDateBonita(),
+    nota: document.getElementById("nota").value.trim(),
+    horaInicio: callState.horaInicio,
+    horaFin: callState.horaFin || nowTime(),
+    fecha: callState.fecha,
   };
 
-  // 1) Agregar a historial local INMEDIATAMENTE
+  // Guardar local
   historial.unshift(registro);
   saveHistorialLocal();
-  actualizarStatHoy();
+  actualizarMeta();
 
-  // 2) Agregar a pendientes de sincronización
+  // Poner en cola de sync
   pendientes.push(registro);
   savePendientesLocal();
 
-  // 3) Feedback al usuario (instantáneo)
   showToast("✅ Guardado. Enviando a la hoja…");
-  limpiarFormulario();
+  resetTodo();
 
-  // 4) Intentar sincronizar en segundo plano
   sincronizarPendientes();
 });
+
+/* ============================================================
+   RESET
+   ============================================================ */
+function resetTodo() {
+  Object.keys(callState).forEach(k => {
+    if (typeof callState[k] === "boolean") callState[k] = false;
+    else callState[k] = "";
+  });
+
+  document.querySelectorAll("#panel-register .chip.selected")
+    .forEach(c => c.classList.remove("selected"));
+  document.getElementById("celular").value = "";
+  document.getElementById("fuente").value = "";
+  document.getElementById("programa").value = "";
+  document.getElementById("carrera").value = "";
+  document.getElementById("nota").value = "";
+  document.getElementById("llamarLuego").checked = false;
+  btnLlamando.disabled = true;
+
+  mostrarFase(1);
+}
 
 /* ============================================================
    SINCRONIZACIÓN
@@ -269,7 +303,6 @@ async function sincronizarPendientes() {
     actualizarIndicadorSync();
     return;
   }
-
   sincronizando = true;
   actualizarIndicadorSync();
 
@@ -281,24 +314,16 @@ async function sincronizarPendientes() {
       savePendientesLocal();
       actualizarIndicadorSync();
     } else {
-      // Falla: parar y reintentar en 15 segundos
       break;
     }
   }
-
   sincronizando = false;
   actualizarIndicadorSync();
-
-  if (pendientes.length > 0) {
-    // Reintentar en 15 seg
-    setTimeout(sincronizarPendientes, 15000);
-  }
+  if (pendientes.length > 0) setTimeout(sincronizarPendientes, 15000);
 }
 
 async function enviarRegistro(reg) {
   try {
-    // Uso no-cors → no vemos respuesta, pero como cada comercial tiene su
-    // propia pestaña no hay riesgo de colisión. Asumimos éxito.
     await fetch(SHEETS_WEBAPP_URL, {
       method: "POST",
       mode: "no-cors",
@@ -313,9 +338,9 @@ async function enviarRegistro(reg) {
 }
 
 function actualizarIndicadorSync() {
-  const dot = document.getElementById("syncDot");
   const text = document.getElementById("syncText");
   const box = document.getElementById("syncStatus");
+  const dot = document.getElementById("syncDot");
   if (pendientes.length === 0) {
     box.className = "sync-indicator sync-ok";
     text.textContent = "Sincronizado";
@@ -330,10 +355,6 @@ function actualizarIndicadorSync() {
 /* ============================================================
    HISTORIAL
    ============================================================ */
-function actualizarStatHoy() {
-  document.getElementById("statHoy").textContent = historial.length;
-}
-
 function renderHistorial() {
   const tbody = document.getElementById("historyBody");
   const empty = document.getElementById("historyEmpty");
@@ -354,13 +375,12 @@ function renderHistorial() {
     return `
       <tr>
         <td>${historial.length - i}</td>
-        <td class="mono">${escapeHtml(r.horaInicio)}</td>
         <td class="mono">${escapeHtml(r.celular)}</td>
         <td>${escapeHtml(r.programa || "—")}</td>
+        <td>${escapeHtml(r.fuente || "—")}</td>
         <td>${contPill}</td>
         <td>${escapeHtml(r.calidad || "—")}</td>
         <td>${escapeHtml((r.nota || "").slice(0, 40))}${(r.nota || "").length > 40 ? "…" : ""}</td>
-        <td></td>
       </tr>
     `;
   }).join("");
@@ -371,14 +391,10 @@ function renderHistorial() {
    ============================================================ */
 loadHistorialLocal();
 loadPendientesLocal();
-actualizarStatHoy();
+actualizarMeta();
 actualizarIndicadorSync();
 renderHistorial();
+mostrarFase(1);
 
-// Si quedaron pendientes de sesiones anteriores, mandar a sincronizar
-if (pendientes.length > 0) {
-  sincronizarPendientes();
-}
-
-// Reintento periódico por si falla la conexión
+if (pendientes.length > 0) sincronizarPendientes();
 setInterval(sincronizarPendientes, 30000);

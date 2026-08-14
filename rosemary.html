@@ -15,6 +15,8 @@
   <header class="app-header">
     <div class="header-inner">
       <div class="brand">
+        <img src="logo.png" alt="MTE" class="brand-logo"
+             onerror="this.onerror=null;this.src='LOGO.png';this.onerror=function(){this.style.display='none';}" />
         <div class="brand-text">
           <span class="brand-label">Comercial</span>
           <h1 class="brand-name">Rosemary</h1>
@@ -34,9 +36,16 @@
       </div>
 
       <div class="header-actions">
-        <div class="stat-box">
-          <span class="stat-label">Hoy</span>
-          <span class="stat-value" id="statHoy">0</span>
+        <div class="goal-tracker">
+          <div class="goal-header">
+            <span class="goal-label">Meta del día</span>
+            <span class="goal-numbers">
+              <strong id="goalCurrent">0</strong>/<span id="goalTotal">50</span>
+            </span>
+          </div>
+          <div class="goal-bar">
+            <div class="goal-bar-fill" id="goalBarFill"></div>
+          </div>
         </div>
         <span class="sync-indicator sync-ok" id="syncStatus">
           <span id="syncDot">●</span>
@@ -46,174 +55,185 @@
     </div>
   </header>
 
-  <!-- ====== MAIN ====== -->
   <main class="app-main">
 
-    <!-- Tabs -->
     <div class="tabs">
       <button class="tab active" data-tab="register">📞 Registrar</button>
       <button class="tab" data-tab="history">📋 Historial del día</button>
     </div>
 
-    <!-- ====== PANEL REGISTRAR ====== -->
+    <!-- ====== REGISTRAR ====== -->
     <section class="tab-panel active" id="panel-register">
 
       <div class="panel-head">
         <h2 class="panel-title">Registrar nueva llamada</h2>
-        <p class="panel-sub">Al escribir el número, se toma la hora de inicio automáticamente.</p>
+        <p class="panel-sub">Escribe el celular, marca los botones según avance la llamada, luego llena los datos.</p>
       </div>
 
       <div class="card">
 
-        <!-- Timer strip (arriba) -->
-        <div class="timer-strip">
-          <div class="timer-block">
-            <span class="timer-label">📅 Fecha</span>
-            <span class="timer-value" id="fldFecha">—</span>
-          </div>
-          <div class="timer-block">
-            <span class="timer-label">⏱ Inicio</span>
-            <span class="timer-value mono" id="fldHoraInicio">—</span>
-          </div>
-          <div class="timer-block">
-            <span class="timer-label">🏁 Fin (al guardar)</span>
-            <span class="timer-value mono" id="fldHoraFin">—</span>
-          </div>
-        </div>
-
-        <!-- ================================
-             DATOS DE LA LLAMADA
-             ================================ -->
-
-        <div class="field-row-2">
+        <!-- FASE 1: input + botón Llamando -->
+        <div id="fase1">
           <label class="field">
             <span class="field-label">Celular</span>
             <input type="tel" id="celular" placeholder="Ej. 51987654321"
                    inputmode="numeric" maxlength="11" autocomplete="off" />
-            <span class="field-hint">11 dígitos (empieza cuando escribes)</span>
+            <span class="field-hint">11 dígitos numéricos</span>
           </label>
-        </div>
 
-        <!-- ================================
-             SECCIONES DEL FORMULARIO
-             ================================ -->
-
-        <div class="section-divider"><span>Fuente</span></div>
-        <div class="chip-group" id="fuenteGroup" data-name="fuente">
-          <button type="button" class="chip" data-value="WSP">WSP</button>
-          <button type="button" class="chip" data-value="FORM">FORM</button>
-          <button type="button" class="chip" data-value="EXLEADS">EXLEADS</button>
-          <button type="button" class="chip" data-value="EXENTRENADOS">EXENTRENADOS</button>
-          <button type="button" class="chip" data-value="ORGANICOS">ORGANICOS</button>
-        </div>
-
-        <div class="section-divider"><span>Programa</span></div>
-        <div class="chip-group chip-grid" id="programaGroup" data-name="programa">
-          <button type="button" class="chip" data-value="GAC I">GAC I</button>
-          <button type="button" class="chip" data-value="GAC II">GAC II</button>
-          <button type="button" class="chip" data-value="GTD">GTD</button>
-          <button type="button" class="chip" data-value="ACE">ACE</button>
-          <button type="button" class="chip" data-value="CGI">CGI</button>
-          <button type="button" class="chip" data-value="GEIMP">GEIMP</button>
-          <button type="button" class="chip" data-value="CIRCUITO">CIRCUITO</button>
-          <button type="button" class="chip" data-value="LAB SUPPLY">LAB SUPPLY</button>
-          <button type="button" class="chip" data-value="DEMO COMEX">DEMO COMEX</button>
-          <button type="button" class="chip" data-value="OCI">OCI</button>
-          <button type="button" class="chip" data-value="GOL">GOL</button>
-          <button type="button" class="chip" data-value="LEAN LOGISTICS">LEAN LOGISTICS</button>
-          <button type="button" class="chip" data-value="TCI">TCI</button>
-          <button type="button" class="chip" data-value="PGA">PGA</button>
-          <button type="button" class="chip" data-value="COMPRAS">COMPRAS</button>
-          <button type="button" class="chip" data-value="SDA">SDA</button>
-        </div>
-
-        <div class="section-divider"><span>Resultado de la llamada</span></div>
-
-        <div class="field-row-2">
-          <div class="field">
-            <span class="field-label">¿Contestó?</span>
-            <div class="chip-group" id="contestoGroup" data-name="contesto">
-              <button type="button" class="chip" data-value="SI">SÍ</button>
-              <button type="button" class="chip" data-value="NO">NO</button>
-            </div>
-          </div>
-          <div class="field">
-            <span class="field-label">¿Hubo conversación?</span>
-            <div class="chip-group" id="conversacionGroup" data-name="conversacion">
-              <button type="button" class="chip" data-value="SI">SÍ</button>
-              <button type="button" class="chip" data-value="NO">NO</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="field">
-          <span class="field-label">Calidad del lead</span>
-          <div class="chip-group" id="calidadGroup" data-name="calidad">
-            <button type="button" class="chip" data-value="CALIENTE">🔥 CALIENTE</button>
-            <button type="button" class="chip" data-value="TIBIO">🌡 TIBIO</button>
-            <button type="button" class="chip" data-value="FRIO">❄ FRÍO</button>
-          </div>
-        </div>
-
-        <label class="toggle-field">
-          <input type="checkbox" id="llamarLuego" />
-          <span>📅 Llamar luego</span>
-        </label>
-
-        <div class="section-divider"><span>Datos del lead</span></div>
-
-        <div class="field">
-          <span class="field-label">Carrera</span>
-          <div class="chip-group chip-grid" id="carreraGroup" data-name="carrera">
-            <button type="button" class="chip" data-value="Administración">Administración</button>
-            <button type="button" class="chip" data-value="Negocios Int">Negocios Int</button>
-            <button type="button" class="chip" data-value="Ing. Industrial">Ing. Industrial</button>
-            <button type="button" class="chip" data-value="Adm. Logistica">Adm. Logística</button>
-            <button type="button" class="chip" data-value="Adm. Industrial">Adm. Industrial</button>
-            <button type="button" class="chip" data-value="Otra carrera afin">Otra carrera afín</button>
-            <button type="button" class="chip" data-value="No tiene carrera">No tiene carrera</button>
-            <button type="button" class="chip" data-value="No segmento carrera">No segmento carrera</button>
-          </div>
-        </div>
-
-        <div class="field-row-2">
-          <div class="field">
-            <span class="field-label">Provincia</span>
-            <div class="chip-group" id="provinciaGroup" data-name="provincia">
-              <button type="button" class="chip" data-value="SI">SÍ</button>
-              <button type="button" class="chip" data-value="NO">NO</button>
-            </div>
-          </div>
-          <div class="field">
-            <span class="field-label">Edad</span>
-            <div class="chip-group" id="edadGroup" data-name="edad">
-              <button type="button" class="chip" data-value="SI">SÍ</button>
-              <button type="button" class="chip" data-value="NO">NO</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="section-divider"><span>Observaciones</span></div>
-
-        <label class="field">
-          <span class="field-label">Nota</span>
-          <textarea id="nota" rows="3" placeholder="Notas adicionales de la llamada…"></textarea>
-        </label>
-
-        <!-- ================================
-             ACCIONES
-             ================================ -->
-        <div class="actions-row">
-          <button class="btn btn-secondary" id="btnLimpiar" type="button">🗑 Limpiar</button>
-          <button class="btn btn-primary btn-lg" id="btnGuardar" type="button" style="margin-left: auto;">
-            💾 Guardar llamada
+          <button class="btn btn-primary btn-lg btn-block" id="btnLlamando" disabled>
+            📞 Llamando
           </button>
+        </div>
+
+        <!-- FASE 2: en llamada -->
+        <div id="fase2" class="hidden">
+          <div class="calling-box">
+            <div class="calling-icon">📞</div>
+            <div class="calling-text">
+              <span class="calling-label">Llamando a</span>
+              <strong class="mono" id="celularEnLlamada">—</strong>
+            </div>
+          </div>
+
+          <button class="btn btn-danger btn-lg btn-block" id="btnFinInteraccion">
+            ⏹ Fin de interacción
+          </button>
+          <button class="btn btn-secondary btn-block" id="btnCancelarLlamando" style="margin-top: 8px;">
+            Cancelar
+          </button>
+        </div>
+
+        <!-- FASE 3: formulario -->
+        <div id="fase3" class="hidden">
+
+          <div class="calling-box calling-box-done">
+            <div class="calling-icon">✓</div>
+            <div class="calling-text">
+              <span class="calling-label">Registrando llamada de</span>
+              <strong class="mono" id="celularEnForm">—</strong>
+            </div>
+          </div>
+
+          <div class="section-divider"><span>Fuente</span></div>
+          <label class="field">
+            <select id="fuente">
+              <option value="">Seleccionar…</option>
+              <option value="WSP">WSP</option>
+              <option value="FORM">FORM</option>
+              <option value="EXLEADS">EXLEADS</option>
+              <option value="EXENTRENADOS">EXENTRENADOS</option>
+              <option value="ORGANICOS">ORGANICOS</option>
+            </select>
+          </label>
+
+          <div class="section-divider"><span>Programa</span></div>
+          <label class="field">
+            <select id="programa">
+              <option value="">Seleccionar…</option>
+              <option value="GAC I">GAC I</option>
+              <option value="GAC II">GAC II</option>
+              <option value="GTD">GTD</option>
+              <option value="ACE">ACE</option>
+              <option value="CGI">CGI</option>
+              <option value="GEIMP">GEIMP</option>
+              <option value="CIRCUITO">CIRCUITO</option>
+              <option value="LAB SUPPLY">LAB SUPPLY</option>
+              <option value="DEMO COMEX">DEMO COMEX</option>
+              <option value="OCI">OCI</option>
+              <option value="GOL">GOL</option>
+              <option value="LEAN LOGISTICS">LEAN LOGISTICS</option>
+              <option value="TCI">TCI</option>
+              <option value="PGA">PGA</option>
+              <option value="COMPRAS">COMPRAS</option>
+              <option value="SDA">SDA</option>
+            </select>
+          </label>
+
+          <div class="section-divider"><span>Resultado de la llamada</span></div>
+
+          <div class="field-row-2">
+            <div class="field">
+              <span class="field-label">¿Contestó?</span>
+              <div class="chip-group" id="contestoGroup" data-name="contesto">
+                <button type="button" class="chip" data-value="SI">SÍ</button>
+                <button type="button" class="chip" data-value="NO">NO</button>
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-label">¿Hubo conversación?</span>
+              <div class="chip-group" id="conversacionGroup" data-name="conversacion">
+                <button type="button" class="chip" data-value="SI">SÍ</button>
+                <button type="button" class="chip" data-value="NO">NO</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="field-label">Calidad del lead</span>
+            <div class="chip-group" id="calidadGroup" data-name="calidad">
+              <button type="button" class="chip" data-value="CALIENTE">🔥 CALIENTE</button>
+              <button type="button" class="chip" data-value="TIBIO">🌡 TIBIO</button>
+              <button type="button" class="chip" data-value="FRIO">❄ FRÍO</button>
+            </div>
+          </div>
+
+          <label class="toggle-field">
+            <input type="checkbox" id="llamarLuego" />
+            <span>📅 Llamar luego</span>
+          </label>
+
+          <div class="section-divider"><span>Datos del lead</span></div>
+
+          <label class="field">
+            <span class="field-label">Carrera</span>
+            <select id="carrera">
+              <option value="">Seleccionar…</option>
+              <option value="Administración">Administración</option>
+              <option value="Negocios Int">Negocios Int</option>
+              <option value="Ing. Industrial">Ing. Industrial</option>
+              <option value="Adm. Logistica">Adm. Logística</option>
+              <option value="Adm. Industrial">Adm. Industrial</option>
+              <option value="Otra carrera afin">Otra carrera afín</option>
+              <option value="No tiene carrera">No tiene carrera</option>
+              <option value="No segmento carrera">No segmento carrera</option>
+            </select>
+          </label>
+
+          <div class="field-row-2">
+            <div class="field">
+              <span class="field-label">Provincia</span>
+              <div class="chip-group" id="provinciaGroup" data-name="provincia">
+                <button type="button" class="chip" data-value="SI">SÍ</button>
+                <button type="button" class="chip" data-value="NO">NO</button>
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-label">Edad</span>
+              <div class="chip-group" id="edadGroup" data-name="edad">
+                <button type="button" class="chip" data-value="SI">SÍ</button>
+                <button type="button" class="chip" data-value="NO">NO</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"><span>Observaciones</span></div>
+          <label class="field">
+            <textarea id="nota" rows="3" placeholder="Notas adicionales de la llamada…"></textarea>
+          </label>
+
+          <div class="actions-row">
+            <button class="btn btn-secondary" id="btnCancelarForm" type="button">Cancelar</button>
+            <button class="btn btn-primary btn-lg" id="btnGuardar" type="button" style="margin-left: auto;">
+              💾 Guardar llamada
+            </button>
+          </div>
         </div>
 
       </div>
     </section>
 
-    <!-- ====== PANEL HISTORIAL ====== -->
+    <!-- ====== HISTORIAL ====== -->
     <section class="tab-panel" id="panel-history">
       <div class="panel-head">
         <h2 class="panel-title">Historial del día</h2>
@@ -228,13 +248,12 @@
           <thead>
             <tr>
               <th>#</th>
-              <th>Hora</th>
               <th>Celular</th>
               <th>Programa</th>
+              <th>Fuente</th>
               <th>Contestó</th>
               <th>Calidad</th>
               <th>Nota</th>
-              <th></th>
             </tr>
           </thead>
           <tbody id="historyBody"></tbody>
