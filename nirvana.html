@@ -72,162 +72,139 @@
 
       <div class="card">
 
-        <!-- FASE 1: input + botón Llamando -->
-        <div id="fase1">
+        <!-- ================================
+             ARRIBA: input + botones de tiempo
+             ================================ -->
+        <div class="field-row-2" style="align-items: end;">
           <label class="field">
             <span class="field-label">Celular</span>
             <input type="tel" id="celular" placeholder="Ej. 51987654321"
                    inputmode="numeric" maxlength="11" autocomplete="off" />
             <span class="field-hint">11 dígitos numéricos</span>
           </label>
-
-          <button class="btn btn-primary btn-lg btn-block" id="btnLlamando" disabled>
-            📞 Llamando
-          </button>
-        </div>
-
-        <!-- FASE 2: en llamada -->
-        <div id="fase2" class="hidden">
-          <div class="calling-box">
-            <div class="calling-icon">📞</div>
-            <div class="calling-text">
-              <span class="calling-label">Llamando a</span>
-              <strong class="mono" id="celularEnLlamada">—</strong>
-            </div>
-          </div>
-
-          <button class="btn btn-danger btn-lg btn-block" id="btnFinInteraccion">
-            ⏹ Fin de interacción
-          </button>
-          <button class="btn btn-secondary btn-block" id="btnCancelarLlamando" style="margin-top: 8px;">
-            Cancelar
-          </button>
-        </div>
-
-        <!-- FASE 3: formulario -->
-        <div id="fase3" class="hidden">
-
-          <div class="calling-box calling-box-done">
-            <div class="calling-icon">✓</div>
-            <div class="calling-text">
-              <span class="calling-label">Registrando llamada de</span>
-              <strong class="mono" id="celularEnForm">—</strong>
-            </div>
-          </div>
-
-          <div class="section-divider"><span>Fuente</span></div>
-          <label class="field">
-            <select id="fuente">
-              <option value="">Seleccionar…</option>
-              <option value="WSP">WSP</option>
-              <option value="FORM">FORM</option>
-              <option value="EXLEADS">EXLEADS</option>
-              <option value="EXENTRENADOS">EXENTRENADOS</option>
-              <option value="ORGANICOS">ORGANICOS</option>
-            </select>
-          </label>
-
-          <div class="section-divider"><span>Programa</span></div>
-          <label class="field">
-            <select id="programa">
-              <option value="">Seleccionar…</option>
-              <option value="GAC I">GAC I</option>
-              <option value="GAC II">GAC II</option>
-              <option value="GTD">GTD</option>
-              <option value="ACE">ACE</option>
-              <option value="CGI">CGI</option>
-              <option value="GEIMP">GEIMP</option>
-              <option value="CIRCUITO">CIRCUITO</option>
-              <option value="LAB SUPPLY">LAB SUPPLY</option>
-              <option value="DEMO COMEX">DEMO COMEX</option>
-              <option value="OCI">OCI</option>
-              <option value="GOL">GOL</option>
-              <option value="LEAN LOGISTICS">LEAN LOGISTICS</option>
-              <option value="TCI">TCI</option>
-              <option value="PGA">PGA</option>
-              <option value="COMPRAS">COMPRAS</option>
-              <option value="SDA">SDA</option>
-            </select>
-          </label>
-
-          <div class="section-divider"><span>Resultado de la llamada</span></div>
-
-          <div class="field-row-2">
-            <div class="field">
-              <span class="field-label">¿Contestó?</span>
-              <div class="chip-group" id="contestoGroup" data-name="contesto">
-                <button type="button" class="chip" data-value="SI">SÍ</button>
-                <button type="button" class="chip" data-value="NO">NO</button>
-              </div>
-            </div>
-            <div class="field">
-              <span class="field-label">¿Hubo conversación?</span>
-              <div class="chip-group" id="conversacionGroup" data-name="conversacion">
-                <button type="button" class="chip" data-value="SI">SÍ</button>
-                <button type="button" class="chip" data-value="NO">NO</button>
-              </div>
-            </div>
-          </div>
-
           <div class="field">
-            <span class="field-label">Calidad del lead</span>
-            <div class="chip-group" id="calidadGroup" data-name="calidad">
-              <button type="button" class="chip" data-value="CALIENTE">🔥 CALIENTE</button>
-              <button type="button" class="chip" data-value="TIBIO">🌡 TIBIO</button>
-              <button type="button" class="chip" data-value="FRIO">❄ FRÍO</button>
+            <span class="field-label">Control de la llamada</span>
+            <div class="call-controls">
+              <button class="btn btn-primary" id="btnLlamando" type="button">📞 Llamando</button>
+              <button class="btn btn-danger" id="btnFinInteraccion" type="button" disabled>⏹ Fin</button>
             </div>
           </div>
+        </div>
 
-          <label class="toggle-field">
-            <input type="checkbox" id="llamarLuego" />
-            <span>📅 Llamar luego</span>
-          </label>
+        <div class="call-status" id="callStatus"></div>
 
-          <div class="section-divider"><span>Datos del lead</span></div>
+        <div class="section-divider"><span>Fuente</span></div>
+        <label class="field">
+          <select id="fuente">
+            <option value="">Seleccionar…</option>
+            <option value="WSP">WSP</option>
+            <option value="FORM">FORM</option>
+            <option value="EXLEADS">EXLEADS</option>
+            <option value="EXENTRENADOS">EXENTRENADOS</option>
+            <option value="ORGANICOS">ORGANICOS</option>
+          </select>
+        </label>
 
-          <label class="field">
-            <span class="field-label">Carrera</span>
-            <select id="carrera">
-              <option value="">Seleccionar…</option>
-              <option value="Administración">Administración</option>
-              <option value="Negocios Int">Negocios Int</option>
-              <option value="Ing. Industrial">Ing. Industrial</option>
-              <option value="Adm. Logistica">Adm. Logística</option>
-              <option value="Adm. Industrial">Adm. Industrial</option>
-              <option value="Otra carrera afin">Otra carrera afín</option>
-              <option value="No tiene carrera">No tiene carrera</option>
-              <option value="No segmento carrera">No segmento carrera</option>
-            </select>
-          </label>
+        <div class="section-divider"><span>Programa</span></div>
+        <label class="field">
+          <select id="programa">
+            <option value="">Seleccionar…</option>
+            <option value="GAC I">GAC I</option>
+            <option value="GAC II">GAC II</option>
+            <option value="GTD">GTD</option>
+            <option value="ACE">ACE</option>
+            <option value="CGI">CGI</option>
+            <option value="GEIMP">GEIMP</option>
+            <option value="CIRCUITO">CIRCUITO</option>
+            <option value="LAB SUPPLY">LAB SUPPLY</option>
+            <option value="DEMO COMEX">DEMO COMEX</option>
+            <option value="OCI">OCI</option>
+            <option value="GOL">GOL</option>
+            <option value="LEAN LOGISTICS">LEAN LOGISTICS</option>
+            <option value="TCI">TCI</option>
+            <option value="PGA">PGA</option>
+            <option value="COMPRAS">COMPRAS</option>
+            <option value="SDA">SDA</option>
+          </select>
+        </label>
 
-          <div class="field-row-2">
-            <div class="field">
-              <span class="field-label">Provincia</span>
-              <div class="chip-group" id="provinciaGroup" data-name="provincia">
-                <button type="button" class="chip" data-value="SI">SÍ</button>
-                <button type="button" class="chip" data-value="NO">NO</button>
-              </div>
-            </div>
-            <div class="field">
-              <span class="field-label">Edad</span>
-              <div class="chip-group" id="edadGroup" data-name="edad">
-                <button type="button" class="chip" data-value="SI">SÍ</button>
-                <button type="button" class="chip" data-value="NO">NO</button>
-              </div>
+        <div class="section-divider"><span>Resultado de la llamada</span></div>
+
+        <div class="field-row-2">
+          <div class="field">
+            <span class="field-label">¿Contestó?</span>
+            <div class="chip-group" id="contestoGroup" data-name="contesto">
+              <button type="button" class="chip" data-value="SI">SÍ</button>
+              <button type="button" class="chip" data-value="NO">NO</button>
             </div>
           </div>
-
-          <div class="section-divider"><span>Observaciones</span></div>
-          <label class="field">
-            <textarea id="nota" rows="3" placeholder="Notas adicionales de la llamada…"></textarea>
-          </label>
-
-          <div class="actions-row">
-            <button class="btn btn-secondary" id="btnCancelarForm" type="button">Cancelar</button>
-            <button class="btn btn-primary btn-lg" id="btnGuardar" type="button" style="margin-left: auto;">
-              💾 Guardar llamada
-            </button>
+          <div class="field">
+            <span class="field-label">¿Hubo conversación?</span>
+            <div class="chip-group" id="conversacionGroup" data-name="conversacion">
+              <button type="button" class="chip" data-value="SI">SÍ</button>
+              <button type="button" class="chip" data-value="NO">NO</button>
+            </div>
           </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label">Calidad del lead</span>
+          <div class="chip-group" id="calidadGroup" data-name="calidad">
+            <button type="button" class="chip" data-value="CALIENTE">🔥 CALIENTE</button>
+            <button type="button" class="chip" data-value="TIBIO">🌡 TIBIO</button>
+            <button type="button" class="chip" data-value="FRIO">❄ FRÍO</button>
+          </div>
+        </div>
+
+        <label class="toggle-field">
+          <input type="checkbox" id="llamarLuego" />
+          <span>📅 Llamar luego</span>
+        </label>
+
+        <div class="section-divider"><span>Datos del lead</span></div>
+
+        <label class="field">
+          <span class="field-label">Carrera</span>
+          <select id="carrera">
+            <option value="">Seleccionar…</option>
+            <option value="Administración">Administración</option>
+            <option value="Negocios Int">Negocios Int</option>
+            <option value="Ing. Industrial">Ing. Industrial</option>
+            <option value="Adm. Logistica">Adm. Logística</option>
+            <option value="Adm. Industrial">Adm. Industrial</option>
+            <option value="Otra carrera afin">Otra carrera afín</option>
+            <option value="No tiene carrera">No tiene carrera</option>
+            <option value="No segmento carrera">No segmento carrera</option>
+          </select>
+        </label>
+
+        <div class="field-row-2">
+          <div class="field">
+            <span class="field-label">Provincia</span>
+            <div class="chip-group" id="provinciaGroup" data-name="provincia">
+              <button type="button" class="chip" data-value="SI">SÍ</button>
+              <button type="button" class="chip" data-value="NO">NO</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label">Edad</span>
+            <div class="chip-group" id="edadGroup" data-name="edad">
+              <button type="button" class="chip" data-value="SI">SÍ</button>
+              <button type="button" class="chip" data-value="NO">NO</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-divider"><span>Observaciones</span></div>
+        <label class="field">
+          <textarea id="nota" rows="3" placeholder="Notas adicionales de la llamada…"></textarea>
+        </label>
+
+        <div class="actions-row">
+          <button class="btn btn-secondary" id="btnLimpiar" type="button">🗑 Limpiar</button>
+          <button class="btn btn-primary btn-lg" id="btnGuardar" type="button" style="margin-left: auto;">
+            💾 Guardar llamada
+          </button>
         </div>
 
       </div>

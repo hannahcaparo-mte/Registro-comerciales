@@ -1,6 +1,7 @@
 /* ============================================================
    REGISTRO COMERCIAL · NIRVANA
-   Flujo: Celular → Llamando → Fin interacción → Formulario
+   Formulario siempre visible. Botones "Llamando" y "Fin"
+   solo marcan las horas internamente (opcionales).
    ============================================================ */
 
 const COMERCIAL = "NIRVANA";
@@ -32,11 +33,11 @@ const callState = {
   nota: "",
   horaInicio: "",   // se toma al apretar "Llamando"
   horaFin: "",      // se toma al apretar "Fin de interacción"
-  fecha: "",        // se toma al apretar "Llamando"
+  fecha: "",        // se toma al apretar "Llamando" (o al Guardar como fallback)
 };
 
 /* ============================================================
-   UTIL: fecha/hora
+   UTIL
    ============================================================ */
 function nowTime() { return new Date().toTimeString().slice(0, 8); }
 function nowDateBonita() {
@@ -101,7 +102,6 @@ function loadHistorialLocal() {
     }
   } catch (e) { console.warn(e); }
 }
-
 function savePendientesLocal() {
   try { localStorage.setItem(PENDING_KEY, JSON.stringify(pendientes)); }
   catch (e) { console.warn(e); }
@@ -167,75 +167,61 @@ setupChipGroup("calidadGroup",      v => callState.calidad = v);
 setupChipGroup("provinciaGroup",    v => callState.provincia = v);
 setupChipGroup("edadGroup",         v => callState.edad = v);
 
-// Selects
 document.getElementById("fuente").addEventListener("change",  e => callState.fuente = e.target.value);
 document.getElementById("programa").addEventListener("change", e => callState.programa = e.target.value);
 document.getElementById("carrera").addEventListener("change",  e => callState.carrera = e.target.value);
 document.getElementById("llamarLuego").addEventListener("change", e => callState.llamarLuego = e.target.checked);
 
 /* ============================================================
-   CELULAR: validación
+   CELULAR
    ============================================================ */
 const celularInput = document.getElementById("celular");
-const btnLlamando = document.getElementById("btnLlamando");
 celularInput.addEventListener("input", (e) => {
   e.target.value = e.target.value.replace(/\D/g, "").slice(0, 11);
-  btnLlamando.disabled = e.target.value.length !== 11;
+  callState.celular = e.target.value;
 });
 
 /* ============================================================
-   FASES DE LA LLAMADA
+   BOTONES DE TIEMPO (Llamando / Fin) — opcionales
    ============================================================ */
-function mostrarFase(n) {
-  document.getElementById("fase1").classList.toggle("hidden", n !== 1);
-  document.getElementById("fase2").classList.toggle("hidden", n !== 2);
-  document.getElementById("fase3").classList.toggle("hidden", n !== 3);
-}
+const btnLlamando = document.getElementById("btnLlamando");
+const btnFin = document.getElementById("btnFinInteraccion");
+const callStatus = document.getElementById("callStatus");
 
-// Fase 1 → 2: apretó "Llamando"
 btnLlamando.addEventListener("click", () => {
-  const cel = celularInput.value.trim();
-  if (cel.length !== 11) {
-    showToast("Celular debe tener 11 dígitos", true);
-    return;
-  }
-  callState.celular = cel;
   callState.horaInicio = nowTime();
   callState.fecha = nowDateBonita();
-
-  document.getElementById("celularEnLlamada").textContent = cel;
-  mostrarFase(2);
+  btnLlamando.disabled = true;
+  btnLlamando.textContent = "✓ En llamada";
+  btnFin.disabled = false;
+  callStatus.textContent = "📞 Llamada en curso…";
+  callStatus.className = "call-status active";
 });
 
-// Fase 2 → 1: cancelar durante llamada
-document.getElementById("btnCancelarLlamando").addEventListener("click", () => {
-  if (!confirm("¿Cancelar esta llamada?")) return;
-  resetTodo();
-});
-
-// Fase 2 → 3: apretó "Fin de interacción"
-document.getElementById("btnFinInteraccion").addEventListener("click", () => {
+btnFin.addEventListener("click", () => {
   callState.horaFin = nowTime();
-  document.getElementById("celularEnForm").textContent = callState.celular;
-  mostrarFase(3);
-});
-
-// Fase 3 → cancelar (perder todo)
-document.getElementById("btnCancelarForm").addEventListener("click", () => {
-  if (!confirm("¿Cancelar? Se perderán los datos de esta llamada.")) return;
-  resetTodo();
+  btnFin.disabled = true;
+  btnFin.textContent = "✓ Finalizada";
+  callStatus.textContent = "✓ Llamada finalizada. Completa el formulario y guarda.";
+  callStatus.className = "call-status done";
 });
 
 /* ============================================================
    GUARDAR
    ============================================================ */
 document.getElementById("btnGuardar").addEventListener("click", () => {
-  // Solo validación: contestó (mínimo)
+  // Validaciones mínimas
+  if (!callState.celular || callState.celular.length !== 11) {
+    showToast("Ingresa un celular de 11 dígitos", true);
+    document.getElementById("celular").focus();
+    return;
+  }
   if (!callState.contesto) {
     showToast("Marca si contestó o no", true);
     return;
   }
 
+  // Fallbacks para horas y fecha si no apretaron los botones
   const registro = {
     _id: Date.now() + "-" + Math.random().toString(36).slice(2, 8),
     _fecha_iso: nowDateISO(),
@@ -251,30 +237,27 @@ document.getElementById("btnGuardar").addEventListener("click", () => {
     provincia: callState.provincia,
     edad: callState.edad,
     nota: document.getElementById("nota").value.trim(),
-    horaInicio: callState.horaInicio,
+    horaInicio: callState.horaInicio || nowTime(),
     horaFin: callState.horaFin || nowTime(),
-    fecha: callState.fecha,
+    fecha: callState.fecha || nowDateBonita(),
   };
 
-  // Guardar local
   historial.unshift(registro);
   saveHistorialLocal();
   actualizarMeta();
 
-  // Poner en cola de sync
   pendientes.push(registro);
   savePendientesLocal();
 
   showToast("✅ Guardado. Enviando a la hoja…");
-  resetTodo();
-
+  limpiarFormulario();
   sincronizarPendientes();
 });
 
 /* ============================================================
-   RESET
+   LIMPIAR FORMULARIO
    ============================================================ */
-function resetTodo() {
+function limpiarFormulario() {
   Object.keys(callState).forEach(k => {
     if (typeof callState[k] === "boolean") callState[k] = false;
     else callState[k] = "";
@@ -288,10 +271,19 @@ function resetTodo() {
   document.getElementById("carrera").value = "";
   document.getElementById("nota").value = "";
   document.getElementById("llamarLuego").checked = false;
-  btnLlamando.disabled = true;
 
-  mostrarFase(1);
+  // Resetear botones de tiempo
+  btnLlamando.disabled = false;
+  btnLlamando.textContent = "📞 Llamando";
+  btnFin.disabled = true;
+  btnFin.textContent = "⏹ Fin";
+  callStatus.textContent = "";
+  callStatus.className = "call-status";
 }
+
+document.getElementById("btnLimpiar").addEventListener("click", () => {
+  if (confirm("¿Limpiar todos los campos?")) limpiarFormulario();
+});
 
 /* ============================================================
    SINCRONIZACIÓN
@@ -394,7 +386,6 @@ loadPendientesLocal();
 actualizarMeta();
 actualizarIndicadorSync();
 renderHistorial();
-mostrarFase(1);
 
 if (pendientes.length > 0) sincronizarPendientes();
 setInterval(sincronizarPendientes, 30000);
