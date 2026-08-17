@@ -7,7 +7,7 @@
 const COMERCIAL = "ANGELA";
 const STORAGE_KEY = "reg_angela_v5";
 const PENDING_KEY = "reg_angela_v5_pending";
-const SHEETS_WEBAPP_URL = "PONER_URL_AQUI";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyq45K8T5C3ORJFJW0l1w_uZSPOlTwXBlHf9Jco0Axxe-MJXgH4E40nA6cMl5IjsdpR/exec";
 
 // META personalizable por comercial: default 50 lun-vie, 25 sábado
 const META_LUN_VIE = 50;
@@ -189,11 +189,18 @@ const btnFin = document.getElementById("btnFinInteraccion");
 const callStatus = document.getElementById("callStatus");
 
 btnLlamando.addEventListener("click", () => {
+  // Validar celular antes de arrancar
+  if (!callState.celular || callState.celular.length !== 11) {
+    showToast("Ingresa un celular de 11 dígitos", true);
+    celularInput.focus();
+    return;
+  }
   callState.horaInicio = nowTime();
   callState.fecha = nowDateBonita();
   btnLlamando.disabled = true;
   btnLlamando.textContent = "✓ En llamada";
   btnFin.disabled = false;
+  celularInput.disabled = true;  // Bloquear celular durante llamada
   callStatus.textContent = "📞 Llamada en curso…";
   callStatus.className = "call-status active";
 });
@@ -210,14 +217,37 @@ btnFin.addEventListener("click", () => {
    GUARDAR
    ============================================================ */
 document.getElementById("btnGuardar").addEventListener("click", () => {
-  // Validaciones mínimas
+  // Validaciones obligatorias
   if (!callState.celular || callState.celular.length !== 11) {
     showToast("Ingresa un celular de 11 dígitos", true);
     document.getElementById("celular").focus();
     return;
   }
+  if (!callState.fuente) {
+    showToast("Selecciona una fuente", true);
+    document.getElementById("fuente").focus();
+    return;
+  }
+  if (!callState.programa) {
+    showToast("Selecciona un programa", true);
+    document.getElementById("programa").focus();
+    return;
+  }
   if (!callState.contesto) {
     showToast("Marca si contestó o no", true);
+    return;
+  }
+  if (!callState.conversacion) {
+    showToast("Marca si hubo conversación o no", true);
+    return;
+  }
+  // Llamando y Fin son obligatorios
+  if (!callState.horaInicio) {
+    showToast("Apreta 📞 Llamando antes de guardar", true);
+    return;
+  }
+  if (!callState.horaFin) {
+    showToast("Finaliza la llamada antes de guardar (apreta ⏹ Fin)", true);
     return;
   }
 
@@ -237,9 +267,9 @@ document.getElementById("btnGuardar").addEventListener("click", () => {
     provincia: callState.provincia,
     edad: callState.edad,
     nota: document.getElementById("nota").value.trim(),
-    horaInicio: callState.horaInicio || nowTime(),
-    horaFin: callState.horaFin || nowTime(),
-    fecha: callState.fecha || nowDateBonita(),
+    horaInicio: callState.horaInicio,
+    horaFin: callState.horaFin,
+    fecha: callState.fecha,
   };
 
   historial.unshift(registro);
@@ -266,6 +296,7 @@ function limpiarFormulario() {
   document.querySelectorAll("#panel-register .chip.selected")
     .forEach(c => c.classList.remove("selected"));
   document.getElementById("celular").value = "";
+  document.getElementById("celular").disabled = false;  // desbloquear
   document.getElementById("fuente").value = "";
   document.getElementById("programa").value = "";
   document.getElementById("carrera").value = "";
@@ -377,6 +408,27 @@ function renderHistorial() {
     `;
   }).join("");
 }
+
+/* ============================================================
+   CHEQUEO DE CAMBIO DE DÍA
+   Si el navegador queda abierto y cambia el día (medianoche),
+   limpiar el historial local para empezar de cero.
+   ============================================================ */
+let fechaCargada = nowDateISO();
+function chequearCambioDeDia() {
+  const hoy = nowDateISO();
+  if (hoy !== fechaCargada) {
+    // Cambio de día detectado: limpiar historial
+    console.log("Cambio de día detectado, limpiando historial local");
+    historial = [];
+    localStorage.removeItem(STORAGE_KEY);
+    fechaCargada = hoy;
+    actualizarMeta();
+    renderHistorial();
+  }
+}
+// Cada minuto verificar
+setInterval(chequearCambioDeDia, 60000);
 
 /* ============================================================
    INICIALIZACIÓN
