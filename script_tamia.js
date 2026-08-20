@@ -177,7 +177,8 @@ document.getElementById("llamarLuego").addEventListener("change", e => callState
    ============================================================ */
 const celularInput = document.getElementById("celular");
 celularInput.addEventListener("input", (e) => {
-  e.target.value = e.target.value.replace(/\D/g, "").slice(0, 11);
+  // Solo dígitos numéricos, sin límite de cantidad
+  e.target.value = e.target.value.replace(/\D/g, "");
   callState.celular = e.target.value;
 });
 
@@ -189,9 +190,9 @@ const btnFin = document.getElementById("btnFinInteraccion");
 const callStatus = document.getElementById("callStatus");
 
 btnLlamando.addEventListener("click", () => {
-  // Validar celular antes de arrancar
-  if (!callState.celular || callState.celular.length !== 11) {
-    showToast("Ingresa un celular de 11 dígitos", true);
+  // Validar celular antes de arrancar (solo pide que haya números)
+  if (!callState.celular || callState.celular.length === 0) {
+    showToast("Ingresa un número de celular", true);
     celularInput.focus();
     return;
   }
@@ -218,8 +219,8 @@ btnFin.addEventListener("click", () => {
    ============================================================ */
 document.getElementById("btnGuardar").addEventListener("click", () => {
   // Validaciones obligatorias
-  if (!callState.celular || callState.celular.length !== 11) {
-    showToast("Ingresa un celular de 11 dígitos", true);
+  if (!callState.celular || callState.celular.length === 0) {
+    showToast("Ingresa un número de celular", true);
     document.getElementById("celular").focus();
     return;
   }
